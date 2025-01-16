@@ -2,9 +2,9 @@
 
 This app *Flutter APP* uses the public API from MangaDex to show free mangas.
 
-<img src="MdAsset/1.png" alt="MangaDexGetter" width="200"/>
-<img src="MdAsset/2.png" alt="MangaDexGetter" width="150"/>
-<img src="MdAsset/3.png" alt="MangaDexGetter" width="100"/>
+<img src="MdAsset/1.png" alt="MangaDexGetter" width="100"/>
+<img src="MdAsset/2.png" alt="MangaDexGetter" width="100"/>
+<img src="MdAsset/3.png" alt="MangaDexGetter" width="50"/>
 
 # 
 
