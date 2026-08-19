@@ -7,6 +7,7 @@ class MangaNavigationBar extends StatelessWidget {
   final VoidCallback nextPage;
   final Color iconColor;
   final Color textColor;
+  final Color? backgroundColor;
 
   const MangaNavigationBar({
     super.key,
@@ -16,11 +17,13 @@ class MangaNavigationBar extends StatelessWidget {
     required this.nextPage,
     required this.iconColor,
     required this.textColor,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
+      color: backgroundColor ?? Colors.transparent,
       padding: const EdgeInsets.all(8.0),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -31,7 +34,7 @@ class MangaNavigationBar extends StatelessWidget {
           ),
           Text(
             'Page ${currentPage + 1} of $totalPages',
-            style: TextStyle(color: textColor),
+            style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
           ),
           IconButton(
             icon: Icon(Icons.arrow_forward, color: iconColor),

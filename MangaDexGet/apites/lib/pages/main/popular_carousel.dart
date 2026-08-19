@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:apites/controllers/main_controller.dart';
+import 'package:apites/widgets/glass_badge.dart';
+import 'package:apites/collection/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/models/manga_model.dart';
 
 class PopularCarousel extends StatelessWidget {
-  final List<Map<String, dynamic>> popularMangaList;
+  final List<MangaModel> popularMangaList;
 
   const PopularCarousel({super.key, required this.popularMangaList});
 
@@ -14,21 +19,13 @@ class PopularCarousel extends StatelessWidget {
     return CarouselSlider(
       options: CarouselOptions(height: 350.0),
       items: popularMangaList.map((manga) {
-        final title = manga['attributes']['title']?['en'] ?? "Unknown Title";
-        final imageUrl = manga['coverUrl'] ?? "https://via.placeholder.com/150";
-        final genres = (manga['attributes']['tags'] as List<dynamic>)
-            .map((tag) => tag['attributes']['name']['en'] as String)
-            .take(4)
-            .toList();
+        final title = manga.title;
+        final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";
+        final genres = manga.genres.take(4).toList();
 
         return GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetailScreen(mangaId: manga['id']),
-              ),
-            );
+            Get.to(() => DetailScreen(mangaId: manga.id));
           },
           child: Stack(
             children: [
@@ -43,9 +40,8 @@ class PopularCarousel extends StatelessWidget {
                       fit: BoxFit.cover,
                       alignment: Alignment.topCenter,
                       placeholder: (context, url) => const Center(
-                        child: SpinKitFadingCircle(
-                          color: Colors.white,
-                          size: 50.0,
+                        child: SpinKitFadingCircle(color: Colors.white,
+                          size: 30.0,
                         ),
                       ),
                       errorWidget: (context, url, error) =>
@@ -69,21 +65,9 @@ class PopularCarousel extends StatelessWidget {
                           const SizedBox(height: 2),
                           Wrap(
                             spacing: 4.0,
-                            runSpacing: -10.0,
+                            runSpacing: 4.0,
                             children: genres
-                                .map((genre) => Chip(
-                                      label: Text(genre),
-                                      backgroundColor:
-                                          Colors.black.withOpacity(0.5),
-                                      labelStyle: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 10,
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 1.0,
-                                        vertical: 0.0,
-                                      ),
-                                    ))
+                                .map((genre) => GlassBadge(label: genre))
                                 .toList(),
                           ),
                         ],

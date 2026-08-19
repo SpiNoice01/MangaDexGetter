@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:apites/collection/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/models/manga_model.dart';
 
 class MangaGrid extends StatelessWidget {
-  final List<Map<String, dynamic>> searchResults;
+  final List<MangaModel> searchResults;
   final bool isLoadingMore;
   final ScrollController scrollController;
 
@@ -28,31 +31,22 @@ class MangaGrid extends StatelessWidget {
         itemBuilder: (context, index) {
           if (index == searchResults.length) {
             return const Center(
-              child: SpinKitFadingCircle(
-                color: Colors.white,
-                size: 50.0,
+              child: SpinKitFadingCircle(color: Colors.white,
+                size: 30.0,
               ),
             );
           }
           final manga = searchResults[index];
 
-          // Extract manga details
-          final title = manga['attributes']['title']?['en'] ?? "Unknown Title";
-          final desc =
-              manga['attributes']['description']?['en'] ?? "No Description";
-          final imageUrl =
-              manga['coverUrl'] ?? "https://via.placeholder.com/150";
+          final title = manga.title;
+          final desc = manga.description;
+          final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";
 
           return Card(
             color: const Color(0xFF2C2F33),
             child: InkWell(
               onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => DetailScreen(mangaId: manga['id']),
-                  ),
-                );
+                Get.to(() => DetailScreen(mangaId: manga.id));
               },
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,9 +59,8 @@ class MangaGrid extends StatelessWidget {
                       fit: BoxFit.cover,
                       alignment: Alignment.topCenter,
                       placeholder: (context, url) => const Center(
-                        child: SpinKitFadingCircle(
-                          color: Colors.white,
-                          size: 50.0,
+                        child: SpinKitFadingCircle(color: Colors.white,
+                          size: 30.0,
                         ),
                       ),
                       errorWidget: (context, url, error) =>

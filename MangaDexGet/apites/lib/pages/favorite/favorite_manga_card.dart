@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:apites/collection/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
+import 'package:apites/models/manga_model.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/widgets/glass_badge.dart';
 
 class FavoriteMangaCard extends StatelessWidget {
-  final Map<String, dynamic> manga;
+  final MangaModel manga;
   final int index;
 
   const FavoriteMangaCard({
@@ -14,23 +19,15 @@ class FavoriteMangaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = manga['attributes']['title']?['en'] ?? "Unknown Title";
-    final desc = manga['attributes']['description']?['en'] ?? "No Description";
-    final imageUrl = manga['coverUrl'] ?? "https://via.placeholder.com/150";
-    final genres = (manga['attributes']['tags'] as List<dynamic>)
-        .map((tag) => tag['attributes']['name']['en'] as String)
-        .take(4)
-        .toList();
+    final title = manga.title;
+    final desc = manga.description;
+    final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";
+    final genres = manga.genres.take(4).toList();
 
     return GestureDetector(
-      key: ValueKey(manga['id']),
+      key: ValueKey(manga.id),
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DetailScreen(mangaId: manga['id']),
-          ),
-        );
+        Get.to(() => DetailScreen(mangaId: manga.id));
       },
       child: Card(
         color: const Color(0xFF2C2F33),
@@ -43,8 +40,9 @@ class FavoriteMangaCard extends StatelessWidget {
                 width: 100,
                 height: 150,
                 fit: BoxFit.cover,
-                placeholder: (context, url) =>
-                    const CircularProgressIndicator(),
+                placeholder: (context, url) => const Center(
+                  child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
+                ),
                 errorWidget: (context, url, error) =>
                     const Icon(Icons.image_not_supported),
               ),
@@ -75,16 +73,9 @@ class FavoriteMangaCard extends StatelessWidget {
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 3.0,
-                      runSpacing: -10.0,
+                      runSpacing: 4.0,
                       children: genres
-                          .map((genre) => Chip(
-                                label: Text(genre),
-                                backgroundColor: Colors.black.withOpacity(0.5),
-                                labelStyle: const TextStyle(
-                                    color: Colors.white, fontSize: 10),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 0, vertical: 0),
-                              ))
+                          .map((genre) => GlassBadge(label: genre))
                           .toList(),
                     ),
                   ],

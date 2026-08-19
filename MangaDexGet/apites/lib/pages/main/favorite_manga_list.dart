@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:apites/collection/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/models/manga_model.dart';
 
 class FavoriteMangaList extends StatelessWidget {
-  final List<Map<String, dynamic>> favoriteMangaList;
+  final List<MangaModel> favoriteMangaList;
   final Function(String) truncateTitle;
 
   const FavoriteMangaList({
@@ -38,20 +41,13 @@ class FavoriteMangaList extends StatelessWidget {
             itemCount: favoriteMangaList.length,
             itemBuilder: (context, index) {
               final manga = favoriteMangaList[index];
-              final title =
-                  manga['attributes']['title']?['en'] ?? "Unknown Title";
+              final title = manga.title;
               final truncatedTitle = truncateTitle(title);
-              final imageUrl =
-                  manga['coverUrl'] ?? "https://via.placeholder.com/150";
+              final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";
 
               return GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => DetailScreen(mangaId: manga['id']),
-                    ),
-                  );
+                  Get.to(() => DetailScreen(mangaId: manga.id));
                 },
                 child: Card(
                   shape: RoundedRectangleBorder(
@@ -70,9 +66,8 @@ class FavoriteMangaList extends StatelessWidget {
                             height: 150,
                             fit: BoxFit.cover,
                             placeholder: (context, url) => const Center(
-                              child: SpinKitFadingCircle(
-                                color: Colors.white,
-                                size: 50.0,
+                              child: SpinKitFadingCircle(color: Colors.white,
+                                size: 30.0,
                               ),
                             ),
                             errorWidget: (context, url, error) =>

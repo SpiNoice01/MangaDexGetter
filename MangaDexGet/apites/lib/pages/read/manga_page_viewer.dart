@@ -36,11 +36,15 @@ class MangaPageViewer extends StatelessWidget {
 
   Widget _buildGalleryView() {
     return RefreshIndicator(
+      color: const Color(0xFFFF6444),
       onRefresh: onRefresh,
       child: PhotoViewGallery.builder(
         pageController: pageController,
         onPageChanged: onPageChanged,
         itemCount: pages.length + 1,
+        loadingBuilder: (context, event) => const Center(
+          child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
+        ),
         builder: (context, index) {
           if (index == pages.length) {
             return PhotoViewGalleryPageOptions.customChild(
@@ -53,7 +57,7 @@ class MangaPageViewer extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.mangaDex,
+                        color: Colors.white,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -95,6 +99,7 @@ class MangaPageViewer extends StatelessWidget {
 
   Widget _buildVerticalScrollView() {
     return RefreshIndicator(
+      color: const Color(0xFFFF6444),
       onRefresh: onRefresh,
       child: ListView.builder(
         itemCount: pages.length + 1,
@@ -109,7 +114,7 @@ class MangaPageViewer extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.mangaDex,
+                      color: Colors.white,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -137,7 +142,7 @@ class MangaPageViewer extends StatelessWidget {
             placeholder: (context, url) => const Center(
               child: SpinKitFadingCircle(
                 color: Colors.white,
-                size: 50.0,
+                size: 30.0,
               ),
             ),
             errorWidget: (context, url, error) =>

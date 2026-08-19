@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
+import 'package:apites/models/manga_model.dart';
+import 'package:apites/widgets/glass_badge.dart';
 
 class CarouselSliderWidget extends StatelessWidget {
-  final List<Map<String, dynamic>> mangaList;
+  final List<MangaModel> mangaList;
 
   const CarouselSliderWidget({super.key, required this.mangaList});
 
@@ -20,21 +23,13 @@ class CarouselSliderWidget extends StatelessWidget {
         viewportFraction: 1.0,
       ),
       items: mangaList.map((manga) {
-        final imageUrl = manga['coverUrl'] ?? "https://via.placeholder.com/150";
-        final title = manga['attributes']['title']?['en'] ?? "Unknown Title";
-        final genres = (manga['attributes']['tags'] as List<dynamic>)
-            .map((tag) => tag['attributes']['name']['en'] as String)
-            .take(4)
-            .toList();
+        final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";
+        final title = manga.title;
+        final genres = manga.genres.take(4).toList();
 
         return GestureDetector(
           onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => DetailScreen(mangaId: manga['id']),
-              ),
-            );
+            Get.to(() => DetailScreen(mangaId: manga.id));
           },
           child: Stack(
             children: [
@@ -82,15 +77,7 @@ class CarouselSliderWidget extends StatelessWidget {
                         runSpacing: 2.0,
                         children: genres
                             .take(5)
-                            .map((genre) => Chip(
-                                  label: Text(genre),
-                                  backgroundColor:
-                                      Colors.black.withOpacity(0.5),
-                                  labelStyle: const TextStyle(
-                                      color: Colors.white, fontSize: 10),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 8.0, vertical: 4.0),
-                                ))
+                            .map((genre) => GlassBadge(label: genre))
                             .toList(),
                       ),
                       const SizedBox(height: 8),

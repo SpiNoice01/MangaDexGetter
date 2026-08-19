@@ -1,38 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:apites/collection/colors.dart';
+import 'package:apites/controllers/main_controller.dart';
+import 'package:apites/widgets/glass_badge.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/models/manga_model.dart';
+
+import 'package:apites/widgets/favorite_button.dart';
 
 class MangaCard extends StatelessWidget {
-  final Map<String, dynamic> manga;
-  final Future<bool> Function(String) isFavorite;
-  final Function(String) toggleFavorite;
+  final MangaModel manga;
 
   const MangaCard({
     super.key,
     required this.manga,
-    required this.isFavorite,
-    required this.toggleFavorite,
   });
 
   @override
   Widget build(BuildContext context) {
-    final title = manga['attributes']['title']?['en'] ?? "Unknown Title";
-    final desc = manga['attributes']['description']?['en'] ?? "No Description";
-    final imageUrl = manga['coverUrl'] ?? "https://via.placeholder.com/150";
-    final genres = (manga['attributes']['tags'] as List<dynamic>)
-        .map((tag) => tag['attributes']['name']['en'] as String)
-        .take(3)
-        .toList();
+    final title = manga.title;
+    final desc = manga.description;
+    final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";
+    final genres = manga.genres.take(3).toList();
 
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DetailScreen(mangaId: manga['id']),
-          ),
-        );
+      onTap: () async {
+        await Get.to(() => DetailScreen(mangaId: manga.id));
+        if (Get.isRegistered<MainController>()) {
+          Get.find<MainController>().fetchFavoriteManga();
+        }
       },
       onLongPress: () {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -55,9 +53,8 @@ class MangaCard extends StatelessWidget {
                   width: 120,
                   height: 170,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => const SpinKitFadingCircle(
-                    color: Colors.white,
-                    size: 50.0,
+                  placeholder: (context, url) => const SpinKitFadingCircle(color: Colors.white,
+                    size: 30.0,
                   ),
                   errorWidget: (context, url, error) =>
                       const Icon(Icons.image_not_supported),
@@ -92,40 +89,11 @@ class MangaCard extends StatelessWidget {
                       spacing: 3.0,
                       runSpacing: -10.0,
                       children: genres
-                          .map((genre) => Chip(
-                                label: Text(genre),
-                                backgroundColor:
-                                    const Color.fromARGB(255, 12, 12, 12)
-                                        .withOpacity(0.7),
-                                labelStyle: const TextStyle(
-                                    color: Colors.white, fontSize: 10),
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 0, vertical: 0),
-                              ))
+                          .map((genre) => GlassBadge(label: genre))
                           .toList(),
                     ),
                     const SizedBox(height: 8),
-                    FutureBuilder<bool>(
-                      future: isFavorite(manga['id']),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return const SpinKitFadingCircle(
-                            color: Colors.white,
-                            size: 50.0,
-                          );
-                        } else {
-                          final isFav = snapshot.data ?? false;
-                          return IconButton(
-                            icon: Icon(
-                              isFav ? Icons.favorite : Icons.favorite_border,
-                              color: isFav ? Colors.red : Colors.white,
-                            ),
-                            onPressed: () => toggleFavorite(manga['id']),
-                          );
-                        }
-                      },
-                    ),
+                    FavoriteButton(mangaId: manga.id),
                   ],
                 ),
               ),

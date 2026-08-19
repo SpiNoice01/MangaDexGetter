@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:apites/controllers/detail_controller.dart';
+import 'package:get/get.dart';
 import 'package:apites/pages/read/read_manga.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
 class MangaChaptersList extends StatelessWidget {
   final List<Map<String, dynamic>> chapters;
@@ -57,8 +60,11 @@ class MangaChaptersList extends StatelessWidget {
             itemCount: chapters.length,
             itemBuilder: (context, index) {
               final chapter = chapters[index];
-              final chapterTitle = chapter['attributes']['title'] ??
-                  'Chapter ${chapter['attributes']['chapter'] ?? ''}';
+              final rawTitle = chapter['attributes']['title']?.toString() ?? '';
+              final chapterNum = chapter['attributes']['chapter']?.toString() ?? '';
+              final chapterTitle = rawTitle.isNotEmpty 
+                  ? rawTitle 
+                  : (chapterNum.isNotEmpty ? 'Chapter $chapterNum' : 'Oneshot');
               final pageCount = chapter['pageCount'] ?? 'Unknown';
               return Card(
                 color: const Color(0xFF2C2F33),
@@ -72,23 +78,21 @@ class MangaChaptersList extends StatelessWidget {
                     style: const TextStyle(color: Colors.white70),
                   ),
                   onTap: () {
-                    print(
-                        "Navigating to ReadMangaScreen with mangaId: $mangaId, chapterId: ${chapter['id']}");
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ReadMangaScreen(
-                          mangaId: mangaId,
-                          chapterId: chapter['id'],
-                        ),
-                      ),
-                    );
+                    Get.to(() => ReadMangaScreen(
+                      mangaId: mangaId,
+                      chapterId: chapter['id'],
+                    ));
                   },
                 ),
               );
             },
           ),
-        if (isLoadingMore) const Center(child: CircularProgressIndicator()),
+        if (isLoadingMore) const Center(
+          child: Padding(
+            padding: EdgeInsets.all(8.0),
+            child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
+          ),
+        ),
       ],
     );
   }
