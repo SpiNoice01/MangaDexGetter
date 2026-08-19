@@ -29,6 +29,7 @@ class DetailController extends GetxController {
   int currentPage = 0;
   final int limit = 100;
   var isAscending = true.obs;
+  var selectedLanguage = 'en'.obs;
 
   DetailController({required this.mangaId});
 
@@ -93,6 +94,7 @@ class DetailController extends GetxController {
         limit: limit,
         offset: page * limit,
         isAscending: isAscending.value,
+        translatedLanguage: selectedLanguage.value,
       );
       
       final chaptersWithDetails = await Future.wait(newChapters.map((chapter) async {
@@ -120,6 +122,13 @@ class DetailController extends GetxController {
 
   void toggleSortOrder() {
     isAscending.value = !isAscending.value;
+    currentPage = 0;
+    chapterKeys.clear();
+    fetchChapters(0);
+  }
+
+  void changeLanguage(String lang) {
+    selectedLanguage.value = lang;
     currentPage = 0;
     chapterKeys.clear();
     fetchChapters(0);

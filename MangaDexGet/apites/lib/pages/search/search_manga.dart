@@ -31,32 +31,56 @@ class SearchScreen extends StatelessWidget {
       body: RefreshIndicator(
         color: const Color(0xFFFF6444),
         onRefresh: () => controller.searchManga(controller.textController.text),
-        child: Column(
-          children: [
-            custom.SearchBar(
-              searchController: controller.textController,
-              onSearch: (query) {
-                controller.searchManga(query);
-              },
+        child: CustomScrollView(
+          controller: controller.scrollController,
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          slivers: [
+            SliverToBoxAdapter(
+              child: custom.SearchBar(
+                searchController: controller.textController,
+                onSearch: (query) {
+                  controller.searchQuery.value = query;
+                },
+              ),
             ),
-            Obx(() => GenreSortDropdown(
-              selectedGenre: controller.selectedGenre.value,
-              selectedSort: controller.selectedSort.value,
-              genres: controller.genres,
-              sortOptions: controller.sortOptions,
-              onGenreChanged: (newGenre) {
-                controller.updateGenre(newGenre);
-              },
-              onSortChanged: (newSort) {
-                controller.updateSort(newSort);
-              },
-            )),
+            SliverToBoxAdapter(
+              child: Obx(() => GenreSortDropdown(
+                selectedGenreId: controller.selectedGenreId.value,
+                selectedSortId: controller.selectedSortId.value,
+                genres: controller.tagList.toList(),
+                sortOptions: controller.sortOptions,
+                onGenreChanged: (newGenreId, newGenreName) {
+                  controller.updateGenre(newGenreId, newGenreName);
+                },
+                onSortChanged: (newSortId, newSortName) {
+                  controller.updateSort(newSortId, newSortName);
+                },
+              )),
+            ),
             Obx(() {
               if (controller.isLoading.value) {
-                return const Expanded(
+                return const SliverToBoxAdapter(
                   child: MangaGridShimmer(),
                 );
               }
+              if (!controller.isLoading.value && controller.searchResults.isEmpty) {
+                return const SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.search_off, size: 64, color: Colors.white24),
+                        SizedBox(height: 16),
+                        Text(
+                          'No manga found',
+                          style: TextStyle(color: Colors.white54, fontSize: 18),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+              
               return MangaGrid(
                 searchResults: controller.searchResults.toList(),
                 isLoadingMore: controller.isLoadingMore.value,

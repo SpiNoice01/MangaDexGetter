@@ -25,14 +25,21 @@ class MangaRepository {
 
   // Get list of Manga
   static Future<List<MangaModel>> getMangaList({
-    required String title,
+    String title = '',
     int limit = 10,
     int offset = 0,
     String? sortOrder,
+    String? includedTagId,
   }) async {
-    String url = "${AppConstants.baseUrl}/manga?title=$title&includes[]=cover_art&limit=$limit&offset=$offset";
+    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art&limit=$limit&offset=$offset";
+    if (title.isNotEmpty) {
+      url += "&title=$title";
+    }
     if (sortOrder != null) {
       url += "&order[$sortOrder]=desc";
+    }
+    if (includedTagId != null && includedTagId.isNotEmpty) {
+      url += "&includedTags[]=$includedTagId";
     }
 
     final response = await http.get(Uri.parse(url));
@@ -110,5 +117,32 @@ class MangaRepository {
       throw Exception('Manga data is null');
     }
     throw Exception('Failed to load manga details: ${response.reasonPhrase}');
+  }
+
+  // Get manga tags (genres, formats, themes)
+  static Future<List<Map<String, String>>> getMangaTags() async {
+    final response = await http.get(Uri.parse('${AppConstants.baseUrl}/manga/tag'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final tags = (data['data'] as List<dynamic>);
+      
+      List<Map<String, String>> tagList = [];
+      for (var tag in tags) {
+        final id = tag['id'] as String;
+        final name = tag['attributes']['name']['en'] as String;
+        // Group can be genre, format, theme, etc.
+        final group = tag['attributes']['group'] as String; 
+        
+        // Let's include everything except content warnings to keep the UI simple
+        if (group != 'content') {
+          tagList.add({'id': id, 'name': name});
+        }
+      }
+      
+      // Sort alphabetically by name
+      tagList.sort((a, b) => a['name']!.compareTo(b['name']!));
+      return tagList;
+    }
+    throw Exception('Failed to load tags');
   }
 }

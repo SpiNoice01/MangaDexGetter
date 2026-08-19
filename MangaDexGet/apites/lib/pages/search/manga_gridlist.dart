@@ -21,15 +21,13 @@ class MangaGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GridView.builder(
-        controller: scrollController,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+    return SliverGrid(
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           childAspectRatio: 0.5,
         ),
-        itemCount: searchResults.length + (isLoadingMore ? 3 : 0),
-        itemBuilder: (context, index) {
+        delegate: SliverChildBuilderDelegate(
+          (context, index) {
           if (index >= searchResults.length) {
             return const MangaGridItemShimmer();
           }
@@ -97,6 +95,7 @@ class MangaGrid extends StatelessWidget {
             ),
           );
         },
+        childCount: searchResults.length + (isLoadingMore ? 3 : 0),
       ),
     );
   }

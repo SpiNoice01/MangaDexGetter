@@ -11,31 +11,55 @@ class MangaSearchController extends GetxController {
   final TextEditingController textController = TextEditingController();
   final ScrollController scrollController = ScrollController();
   
-  var selectedGenre = 'All'.obs;
-  var selectedSort = 'Relevance'.obs;
+  var searchQuery = ''.obs;
+  
+  var selectedGenreId = ''.obs; // The UUID of the selected tag
+  var selectedGenreName = 'All'.obs; // The UI display name
+  
+  var selectedSortId = 'relevance'.obs; // The sort order key for API
+  var selectedSortName = 'Relevance'.obs; // The UI display name
   
   int currentPage = 0;
   final int pageSize = 20;
 
-  final List<String> genres = [
-    'All',
-    'Action',
-    'Adventure',
-    'Comedy',
-    'Drama',
-    'Fantasy',
-    'Horror',
-    'Mystery',
-    'Romance',
-    'Sci-Fi'
-  ];
+  var tagList = <Map<String, String>>[{'id': '', 'name': 'All'}].obs;
   
-  final List<String> sortOptions = ['Relevance', 'Rating', 'Newest'];
+  final List<Map<String, String>> sortOptions = [
+    {'id': 'relevance', 'name': 'Relevance'},
+    {'id': 'latestUploadedChapter', 'name': 'Latest Uploaded'},
+    {'id': 'followedCount', 'name': 'Most Followed'},
+    {'id': 'rating', 'name': 'Highest Rating'},
+    {'id': 'createdAt', 'name': 'Newest Added'},
+  ];
+
 
   @override
   void onInit() {
     super.onInit();
     scrollController.addListener(_scrollListener);
+    _fetchTags();
+    
+    // Load initial data
+    searchManga('');
+    
+    // Debounce typing to avoid API spam
+    debounce(searchQuery, (query) {
+      if (query.isNotEmpty) {
+        searchManga(query);
+      } else {
+        searchManga('');
+      }
+    }, time: const Duration(milliseconds: 600));
+  }
+
+  Future<void> _fetchTags() async {
+    try {
+      final tags = await MangaRepository.getMangaTags();
+      // Insert 'All' at the beginning
+      tagList.assignAll([{'id': '', 'name': 'All'}, ...tags]);
+    } catch (e) {
+      print("Error fetching tags: $e");
+    }
   }
 
   @override
@@ -51,12 +75,17 @@ class MangaSearchController extends GetxController {
     }
   }
 
-  void updateGenre(String genre) {
-    selectedGenre.value = genre;
+  void updateGenre(String genreId, String genreName) {
+    selectedGenreId.value = genreId;
+    selectedGenreName.value = genreName;
+    // Auto trigger search when genre changes
+    searchManga(textController.text);
   }
 
-  void updateSort(String sort) {
-    selectedSort.value = sort;
+  void updateSort(String sortId, String sortName) {
+    selectedSortId.value = sortId;
+    selectedSortName.value = sortName;
+    searchManga(textController.text);
   }
 
   Future<void> searchManga(String query) async {
@@ -65,20 +94,12 @@ class MangaSearchController extends GetxController {
     searchResults.clear();
 
     try {
-      List<MangaModel> results;
-      
-      String? sortOrder;
-      if (selectedSort.value == 'Rating') {
-        sortOrder = 'rating';
-      } else if (selectedSort.value == 'Newest') {
-        sortOrder = 'createdAt';
-      }
-
-      results = await MangaRepository.getMangaList(
+      final results = await MangaRepository.getMangaList(
         title: query,
         limit: pageSize,
         offset: currentPage * pageSize,
-        sortOrder: sortOrder,
+        sortOrder: selectedSortId.value,
+        includedTagId: selectedGenreId.value,
       );
 
       _filterAndAssignResults(results, isLoadMore: false);
@@ -94,20 +115,12 @@ class MangaSearchController extends GetxController {
     isLoadingMore.value = true;
 
     try {
-      List<MangaModel> results;
-      
-      String? sortOrder;
-      if (selectedSort.value == 'Rating') {
-        sortOrder = 'rating';
-      } else if (selectedSort.value == 'Newest') {
-        sortOrder = 'createdAt';
-      }
-
-      results = await MangaRepository.getMangaList(
+      final results = await MangaRepository.getMangaList(
         title: textController.text,
         limit: pageSize,
         offset: (currentPage + 1) * pageSize,
-        sortOrder: sortOrder,
+        sortOrder: selectedSortId.value,
+        includedTagId: selectedGenreId.value,
       );
 
       _filterAndAssignResults(results, isLoadMore: true);
@@ -120,19 +133,10 @@ class MangaSearchController extends GetxController {
   }
 
   void _filterAndAssignResults(List<MangaModel> results, {required bool isLoadMore}) {
-    List<MangaModel> filteredResults = results;
-
-    // Filter by genre
-    if (selectedGenre.value != 'All') {
-      filteredResults = results.where((manga) {
-        return manga.genres.contains(selectedGenre.value);
-      }).toList();
-    }
-
     if (isLoadMore) {
-      searchResults.addAll(filteredResults);
+      searchResults.addAll(results);
     } else {
-      searchResults.assignAll(filteredResults);
+      searchResults.assignAll(results);
     }
   }
 }

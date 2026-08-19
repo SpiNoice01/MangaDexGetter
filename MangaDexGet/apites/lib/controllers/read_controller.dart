@@ -9,8 +9,9 @@ import 'package:flutter/services.dart';
 class ReadController extends GetxController {
   final String mangaId;
   String? chapterId;
+  final String? translatedLanguage;
 
-  ReadController({required this.mangaId, this.chapterId});
+  ReadController({required this.mangaId, this.chapterId, this.translatedLanguage});
 
   var pages = <String>[].obs;
   var isLoading = true.obs;
@@ -57,7 +58,7 @@ class ReadController extends GetxController {
     isLoading.value = true;
     try {
       if (chapterId == null) {
-        final chapters = await MangaDexService.getMangaChapters(mangaId, limit: 1, offset: 0);
+        final chapters = await MangaDexService.getMangaChapters(mangaId, limit: 1, offset: 0, translatedLanguage: translatedLanguage ?? 'en');
         if (chapters.isNotEmpty) {
           chapterId = chapters.first['id'];
         }
@@ -68,9 +69,16 @@ class ReadController extends GetxController {
         final chapterModel = ChapterModel.fromJson(chapterData);
         
         final fetchedPages = await MangaDexService.getChapterPages(chapterId!);
-        final nextChapter = await MangaDexService.getNextChapter(mangaId, chapterId!);
+        final nextChapter = await MangaDexService.getNextChapter(mangaId, chapterId!, translatedLanguage: translatedLanguage ?? 'en');
 
         pages.assignAll(fetchedPages);
+        
+        // Pre-cache first 3 pages
+        if (Get.context != null) {
+          for (int i = 0; i < (pages.length > 3 ? 3 : pages.length); i++) {
+            precacheImage(NetworkImage(pages[i]), Get.context!);
+          }
+        }
         chapterTitle.value = chapterModel.title;
         chapterNumber.value = chapterModel.chapter;
         nextChapterId.value = nextChapter?['id'];
@@ -108,6 +116,12 @@ class ReadController extends GetxController {
     
     // Auto-hide System UI when scrolling
     _hideSystemUI();
+    
+    // Precache the next 2 pages to make reading perfectly smooth
+    if (Get.context != null) {
+      if (index + 1 < pages.length) precacheImage(NetworkImage(pages[index + 1]), Get.context!);
+      if (index + 2 < pages.length) precacheImage(NetworkImage(pages[index + 2]), Get.context!);
+    }
   }
 
   void nextPage() {
@@ -141,6 +155,95 @@ class ReadController extends GetxController {
       textColor.value = const Color.fromARGB(255, 203, 203, 203);
       iconColor.value = const Color.fromARGB(255, 185, 184, 184);
     }
+  }
+
+  void showSettingsBottomSheet() {
+    Get.bottomSheet(
+      Container(
+        padding: const EdgeInsets.all(16),
+        decoration: const BoxDecoration(
+          color: Color(0xFF2C2F33),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Reading Settings', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            const Text('Theme', style: TextStyle(color: Colors.white70)),
+            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _themeButton('Dark', const Color(0xFF2C2F33)),
+                _themeButton('Light', const Color.fromARGB(255, 217, 217, 217)),
+                _themeButton('Sepia', const Color.fromARGB(255, 195, 169, 128)),
+              ],
+            ),
+            const SizedBox(height: 24),
+            const Text('Scroll Mode', style: TextStyle(color: Colors.white70)),
+            const SizedBox(height: 12),
+            Obx(() => Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: !isVerticalScrollMode.value ? const Color(0xFFFF6444) : const Color(0xFF3F4349),
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      isVerticalScrollMode.value = false;
+                      Get.back();
+                    },
+                    child: const Text('Horizontal'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isVerticalScrollMode.value ? const Color(0xFFFF6444) : const Color(0xFF3F4349),
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: () {
+                      isVerticalScrollMode.value = true;
+                      Get.back();
+                    },
+                    child: const Text('Vertical'),
+                  ),
+                ),
+              ],
+            )),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _themeButton(String label, Color color) {
+    return GestureDetector(
+      onTap: () {
+        changeTheme(color);
+        Get.back();
+      },
+      child: Column(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color,
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white24, width: 2),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+        ],
+      ),
+    );
   }
 
   void readNextChapter() {

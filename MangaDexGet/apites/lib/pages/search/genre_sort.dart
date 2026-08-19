@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 
 class GenreSortDropdown extends StatelessWidget {
-  final String selectedGenre;
-  final String selectedSort;
-  final List<String> genres;
-  final List<String> sortOptions;
-  final Function(String) onGenreChanged;
-  final Function(String) onSortChanged;
+  final String selectedGenreId;
+  final String selectedSortId;
+  final List<Map<String, String>> genres;
+  final List<Map<String, String>> sortOptions;
+  final Function(String, String) onGenreChanged;
+  final Function(String, String) onSortChanged;
 
   const GenreSortDropdown({
     super.key,
-    required this.selectedGenre,
-    required this.selectedSort,
+    required this.selectedGenreId,
+    required this.selectedSortId,
     required this.genres,
     required this.sortOptions,
     required this.onGenreChanged,
@@ -26,34 +26,38 @@ class GenreSortDropdown extends StatelessWidget {
         children: [
           Expanded(
             child: DropdownButton<String>(
-              value: selectedGenre,
+              value: selectedGenreId,
               dropdownColor: const Color(0xFF2C2F33),
               style: const TextStyle(color: Colors.white),
-              items: genres.map((String genre) {
+              isExpanded: true,
+              items: genres.map((tag) {
                 return DropdownMenuItem<String>(
-                  value: genre,
-                  child: Text(genre),
+                  value: tag['id'],
+                  child: Text(tag['name']!),
                 );
               }).toList(),
               onChanged: (newValue) {
-                onGenreChanged(newValue!);
+                final selectedTag = genres.firstWhere((tag) => tag['id'] == newValue);
+                onGenreChanged(selectedTag['id']!, selectedTag['name']!);
               },
             ),
           ),
           const SizedBox(width: 10),
           Expanded(
             child: DropdownButton<String>(
-              value: selectedSort,
+              value: selectedSortId,
               dropdownColor: const Color(0xFF2C2F33),
               style: const TextStyle(color: Colors.white),
-              items: sortOptions.map((String sortOption) {
+              isExpanded: true,
+              items: sortOptions.map((sortOption) {
                 return DropdownMenuItem<String>(
-                  value: sortOption,
-                  child: Text(sortOption),
+                  value: sortOption['id'],
+                  child: Text(sortOption['name']!),
                 );
               }).toList(),
               onChanged: (newValue) {
-                onSortChanged(newValue!);
+                final selectedOption = sortOptions.firstWhere((option) => option['id'] == newValue);
+                onSortChanged(selectedOption['id']!, selectedOption['name']!);
               },
             ),
           ),

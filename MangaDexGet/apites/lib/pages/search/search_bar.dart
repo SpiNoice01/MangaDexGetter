@@ -19,11 +19,25 @@ class SearchBar extends StatelessWidget {
         decoration: InputDecoration(
           labelText: 'Search',
           labelStyle: const TextStyle(color: Colors.white),
-          suffixIcon: IconButton(
-            icon: const Icon(Icons.search, color: Colors.white),
-            onPressed: () {
-              onSearch(searchController.text);
-            },
+          suffixIcon: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (searchController.text.isNotEmpty)
+                IconButton(
+                  icon: const Icon(Icons.clear, color: Colors.white54),
+                  onPressed: () {
+                    searchController.clear();
+                    onSearch('');
+                  },
+                ),
+              IconButton(
+                icon: const Icon(Icons.search, color: Colors.white),
+                onPressed: () {
+                  FocusScope.of(context).unfocus();
+                  onSearch(searchController.text);
+                },
+              ),
+            ],
           ),
           enabledBorder: OutlineInputBorder(
             borderSide: const BorderSide(color: Colors.white),
@@ -35,6 +49,9 @@ class SearchBar extends StatelessWidget {
           ),
         ),
         style: const TextStyle(color: Colors.white),
+        onChanged: (value) {
+          onSearch(value);
+        },
         onSubmitted: (query) {
           onSearch(query);
         },

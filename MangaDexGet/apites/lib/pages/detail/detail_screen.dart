@@ -98,6 +98,7 @@ class DetailScreen extends StatelessWidget {
                             await Get.to(() => ReadMangaScreen(
                               mangaId: mangaId,
                               chapterId: chapterId,
+                              translatedLanguage: controller.selectedLanguage.value,
                             ));
                             controller.loadReadHistory();
                           }
@@ -142,6 +143,31 @@ class DetailScreen extends StatelessWidget {
                     );
                   }),
                   const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Chapters', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+                      Obx(() => DropdownButton<String>(
+                        value: controller.selectedLanguage.value,
+                        dropdownColor: const Color(0xFF2C2F33),
+                        style: const TextStyle(color: Colors.white),
+                        underline: const SizedBox(),
+                        icon: const Icon(Icons.language, color: Colors.white70),
+                        items: const [
+                          DropdownMenuItem(value: 'en', child: Text('English')),
+                          DropdownMenuItem(value: 'id', child: Text('Indonesian')),
+                          DropdownMenuItem(value: 'es-la', child: Text('Spanish (LA)')),
+                          DropdownMenuItem(value: 'fr', child: Text('French')),
+                          DropdownMenuItem(value: 'pt-br', child: Text('Portuguese (BR)')),
+                          DropdownMenuItem(value: 'ja', child: Text('Japanese')),
+                        ],
+                        onChanged: (val) {
+                          if (val != null) controller.changeLanguage(val);
+                        },
+                      )),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
                   MangaChaptersList(
                     chapters: controller.chapters.toList(),
                     isLoadingMore: controller.isLoadingMore.value,

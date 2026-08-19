@@ -105,7 +105,9 @@ class MangaPageViewer extends StatelessWidget {
         itemCount: pages.length + 1,
         itemBuilder: (context, index) {
           if (index == pages.length) {
-            return Center(
+            return Container(
+              height: MediaQuery.of(context).size.height * 0.5,
+              alignment: Alignment.center,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -139,10 +141,13 @@ class MangaPageViewer extends StatelessWidget {
           }
           return CachedNetworkImage(
             imageUrl: pages[index],
-            placeholder: (context, url) => const Center(
-              child: SpinKitFadingCircle(
-                color: Colors.white,
-                size: 30.0,
+            placeholder: (context, url) => AspectRatio(
+              aspectRatio: 0.7, // Standard manga page ratio so spinners don't squish
+              child: const Center(
+                child: SpinKitFadingCircle(
+                  color: Colors.white,
+                  size: 30.0,
+                ),
               ),
             ),
             errorWidget: (context, url, error) =>

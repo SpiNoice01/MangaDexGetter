@@ -126,12 +126,11 @@ class MangaDexService {
     throw Exception('Failed to load manga details: ${response.reasonPhrase}');
   }
 
-  // Get manga chapters
   static Future<List<Map<String, dynamic>>> getMangaChapters(String mangaId,
-      {required int limit, required int offset, bool isAscending = true}) async {
+      {required int limit, required int offset, bool isAscending = true, String translatedLanguage = 'en'}) async {
     final order = isAscending ? 'asc' : 'desc';
     final response = await http.get(Uri.parse(
-        '$baseUrl/manga/$mangaId/feed?translatedLanguage[]=en&order[chapter]=$order&limit=$limit&offset=$offset'));
+        '$baseUrl/manga/$mangaId/feed?translatedLanguage[]=$translatedLanguage&order[chapter]=$order&limit=$limit&offset=$offset'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -158,8 +157,8 @@ class MangaDexService {
 
   // Get next chapter
   static Future<Map<String, dynamic>?> getNextChapter(
-      String mangaId, String currentChapterId) async {
-    final chapters = await getMangaChapters(mangaId, limit: 100, offset: 0);
+      String mangaId, String currentChapterId, {String translatedLanguage = 'en'}) async {
+    final chapters = await getMangaChapters(mangaId, limit: 100, offset: 0, translatedLanguage: translatedLanguage);
     for (int i = 0; i < chapters.length; i++) {
       if (chapters[i]['id'] == currentChapterId && i + 1 < chapters.length) {
         return chapters[i + 1];

@@ -9,14 +9,15 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 class ReadMangaScreen extends StatelessWidget {
   final String mangaId;
   final String? chapterId;
+  final String? translatedLanguage;
 
-  const ReadMangaScreen({super.key, required this.mangaId, this.chapterId});
+  const ReadMangaScreen({super.key, required this.mangaId, this.chapterId, this.translatedLanguage});
 
   @override
   Widget build(BuildContext context) {
     // Unique tag in case we open multiple instances (rare but good practice)
     final ReadController controller = Get.put(
-      ReadController(mangaId: mangaId, chapterId: chapterId),
+      ReadController(mangaId: mangaId, chapterId: chapterId, translatedLanguage: translatedLanguage),
       tag: '$mangaId-$chapterId',
     );
 
@@ -54,30 +55,9 @@ class ReadMangaScreen extends StatelessWidget {
               defaultColor: iconColor,
               isBeatingAnimation: true,
             ),
-            PopupMenuButton<Color>(
-              onSelected: controller.changeTheme,
-              itemBuilder: (context) => [
-                const PopupMenuItem(
-                  value: Color.fromARGB(255, 217, 217, 217),
-                  child: Text('White Theme'),
-                ),
-                const PopupMenuItem(
-                  value: Color(0xFF2C2F33),
-                  child: Text('Dark Theme'),
-                ),
-                const PopupMenuItem(
-                  value: Color.fromARGB(255, 195, 169, 128),
-                  child: Text('Warm Theme'),
-                ),
-              ],
-              icon: Icon(Icons.color_lens, color: iconColor),
-            ),
             IconButton(
-              icon: Icon(
-                isVerticalScrollMode ? Icons.view_carousel : Icons.view_stream,
-                color: iconColor,
-              ),
-              onPressed: controller.toggleScrollMode,
+              icon: Icon(Icons.settings, color: iconColor),
+              onPressed: controller.showSettingsBottomSheet,
             ),
           ],
         ),
