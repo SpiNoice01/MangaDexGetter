@@ -4,6 +4,8 @@ import 'package:apites/models/manga_model.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:apites/widgets/glass_badge.dart';
 import 'package:apites/widgets/favorite_button.dart';
+import 'package:apites/pages/search/search_manga.dart';
+import 'package:get/get.dart';
 
 class MangaDetailsHeader extends StatelessWidget {
   final MangaModel mangaDetails;
@@ -68,24 +70,50 @@ class MangaDetailsHeader extends StatelessWidget {
         Wrap(
           spacing: 8.0,
           runSpacing: 4.0,
-          children: mangaDetails.genres
-              .map((tag) => GlassBadge(label: tag))
-              .toList(),
+          children: mangaDetails.genres.map((tag) {
+            return GestureDetector(
+              onTap: () {
+                Get.to(() => const SearchScreen(), arguments: {
+                  'genreName': tag,
+                });
+              },
+              child: GlassBadge(label: tag),
+            );
+          }).toList(),
         ),
         const SizedBox(height: 16),
-        Text(
-          'Author: $authorName',
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
+        GestureDetector(
+          onTap: () {
+            Get.to(() => const SearchScreen(), arguments: {
+              'query': authorName,
+              'mode': 'artist',
+            });
+          },
+          child: Text(
+            'Author: $authorName',
+            style: const TextStyle(
+              color: Color(0xFFFF6444),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(height: 8),
-        Text(
-          'Status: ${mangaDetails.status ?? 'Unknown'}',
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
+        GestureDetector(
+          onTap: () {
+            if (mangaDetails.status != null) {
+              Get.to(() => const SearchScreen(), arguments: {
+                'status': mangaDetails.status!.toLowerCase(),
+              });
+            }
+          },
+          child: Text(
+            'Status: ${mangaDetails.status ?? 'Unknown'}',
+            style: const TextStyle(
+              color: Color(0xFFFF6444),
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
         const SizedBox(height: 8),

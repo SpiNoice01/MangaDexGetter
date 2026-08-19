@@ -23,6 +23,8 @@ class MangaSearchController extends GetxController {
   var selectedSortId = 'relevance'.obs; // The sort order key for API
   var selectedSortName = 'Relevance'.obs; // The UI display name
   
+  var selectedStatus = ''.obs;
+  
   int currentPage = 0;
   final int pageSize = 20;
 
@@ -41,10 +43,28 @@ class MangaSearchController extends GetxController {
   void onInit() {
     super.onInit();
     scrollController.addListener(_scrollListener);
+    
+    if (Get.arguments != null && Get.arguments is Map) {
+      final args = Get.arguments as Map;
+      if (args['query'] != null) {
+        searchQuery.value = args['query'];
+        textController.text = args['query'];
+      }
+      if (args['mode'] != null) {
+        searchMode.value = args['mode'];
+      }
+      if (args['genreName'] != null) {
+        selectedGenreName.value = args['genreName'];
+      }
+      if (args['status'] != null) {
+        selectedStatus.value = args['status'];
+      }
+    }
+
     _fetchTags();
     
     // Load initial data
-    searchManga('');
+    searchManga(textController.text);
     
     // Debounce typing to avoid API spam
     debounce(searchQuery, (query) {
@@ -72,6 +92,18 @@ class MangaSearchController extends GetxController {
       final tags = await MangaRepository.getMangaTags();
       // Insert 'All' at the beginning
       tagList.assignAll([{'id': '', 'name': 'All'}, ...tags]);
+      
+      // If we have a genreName from arguments but no ID, find the ID now!
+      if (selectedGenreName.value != 'All' && selectedGenreId.value == '') {
+        final match = tagList.firstWhere(
+          (tag) => tag['name']?.toLowerCase() == selectedGenreName.value.toLowerCase(), 
+          orElse: () => {'id': ''}
+        );
+        if (match['id'] != '') {
+          selectedGenreId.value = match['id']!;
+          searchManga(textController.text); // Search again with the correct genre ID
+        }
+      }
     } catch (e) {
       print("Error fetching tags: $e");
     }
@@ -142,6 +174,7 @@ class MangaSearchController extends GetxController {
         offset: currentPage * pageSize,
         sortOrder: selectedSortId.value,
         includedTagId: selectedGenreId.value,
+        status: selectedStatus.value,
         hideNsfw: hideNsfw.value,
       );
 
@@ -165,6 +198,7 @@ class MangaSearchController extends GetxController {
         offset: (currentPage + 1) * pageSize,
         sortOrder: selectedSortId.value,
         includedTagId: selectedGenreId.value,
+        status: selectedStatus.value,
         hideNsfw: hideNsfw.value,
       );
 

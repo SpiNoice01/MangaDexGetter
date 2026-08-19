@@ -52,6 +52,7 @@ class MangaRepository {
     int offset = 0,
     String? sortOrder,
     String? includedTagId,
+    String? status,
     bool hideNsfw = false,
   }) async {
     String contentRating = hideNsfw 
@@ -81,6 +82,9 @@ class MangaRepository {
     }
     if (includedTagId != null && includedTagId.isNotEmpty) {
       url += "&includedTags[]=$includedTagId";
+    }
+    if (status != null && status.isNotEmpty) {
+      url += "&status[]=$status";
     }
 
     final response = await http.get(Uri.parse(url));
