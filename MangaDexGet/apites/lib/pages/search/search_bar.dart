@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 class SearchBar extends StatelessWidget {
   final TextEditingController searchController;
   final Function(String) onSearch;
+  final String hintText;
 
   const SearchBar({
     super.key,
     required this.searchController,
     required this.onSearch,
+    this.hintText = 'Search...',
   });
 
   @override
@@ -20,7 +22,7 @@ class SearchBar extends StatelessWidget {
           return TextField(
             controller: searchController,
             decoration: InputDecoration(
-              hintText: 'Search manga, author, or keyword...',
+              hintText: hintText,
               hintStyle: const TextStyle(color: Colors.white54),
               prefixIcon: const Icon(Icons.search, color: Colors.white54),
               suffixIcon: value.text.isNotEmpty

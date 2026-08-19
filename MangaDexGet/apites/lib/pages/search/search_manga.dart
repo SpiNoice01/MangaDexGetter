@@ -26,6 +26,43 @@ class SearchScreen extends StatelessWidget {
             Get.back();
           },
         ),
+        actions: [
+          Obx(() => Row(
+            children: [
+              const Text('NSFW', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => controller.toggleNsfw(!controller.hideNsfw.value),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 34,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: !controller.hideNsfw.value ? Colors.redAccent.withValues(alpha: 0.4) : Colors.white24,
+                  ),
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    alignment: !controller.hideNsfw.value ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: !controller.hideNsfw.value ? Colors.redAccent : Colors.white54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          )),
+          const SizedBox(width: 4),
+        ],
       ),
       backgroundColor: const Color(0xFF23272A),
       body: RefreshIndicator(
@@ -36,13 +73,90 @@ class SearchScreen extends StatelessWidget {
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
           slivers: [
             SliverToBoxAdapter(
-              child: custom.SearchBar(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
+                child: Obx(() => Row(
+                  children: [
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (controller.searchMode.value != 'manga') {
+                            controller.searchMode.value = 'manga';
+                            controller.searchManga(controller.textController.text);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: controller.searchMode.value == 'manga' ? const Color(0xFFFF6444) : const Color(0xFF2C2F33),
+                            borderRadius: const BorderRadius.only(topLeft: Radius.circular(8), bottomLeft: Radius.circular(8)),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Text('Search Manga', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 2), // Small gap
+                    Expanded(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (controller.searchMode.value != 'artist') {
+                            controller.searchMode.value = 'artist';
+                            controller.searchManga(controller.textController.text);
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                          decoration: BoxDecoration(
+                            color: controller.searchMode.value == 'artist' ? const Color(0xFFFF6444) : const Color(0xFF2C2F33),
+                            borderRadius: const BorderRadius.only(topRight: Radius.circular(8), bottomRight: Radius.circular(8)),
+                          ),
+                          alignment: Alignment.center,
+                          child: const Text('Search Artist', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        ),
+                      ),
+                    ),
+                  ],
+                )),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Obx(() => custom.SearchBar(
                 searchController: controller.textController,
+                hintText: controller.searchMode.value == 'manga' ? 'Search manga title...' : 'Search artist/author name...',
                 onSearch: (query) {
                   controller.searchQuery.value = query;
                 },
-              ),
+              )),
             ),
+            Obx(() {
+              if (controller.authorSuggestions.isNotEmpty) {
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: controller.authorSuggestions.map((author) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 8.0),
+                            child: ActionChip(
+                              label: Text(author['name']!, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                              backgroundColor: const Color(0xFF2C2F33),
+                              side: const BorderSide(color: Color(0xFFFF6444), width: 1),
+                              onPressed: () {
+                                controller.selectAuthor(author['name']!);
+                              },
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ),
+                );
+              }
+              return const SliverToBoxAdapter(child: SizedBox.shrink());
+            }),
             SliverToBoxAdapter(
               child: Obx(() => GenreSortDropdown(
                 selectedGenreId: controller.selectedGenreId.value,
@@ -90,6 +204,16 @@ class SearchScreen extends StatelessWidget {
           ],
         ),
       ),
+      floatingActionButton: Obx(() {
+        if (controller.showBackToTop.value) {
+          return FloatingActionButton(
+            backgroundColor: const Color(0xFFFF6444),
+            onPressed: controller.scrollToTop,
+            child: const Icon(Icons.arrow_upward, color: Colors.white),
+          );
+        }
+        return const SizedBox.shrink();
+      }),
     );
   }
 }

@@ -23,17 +23,58 @@ class MangaRepository {
     return null;
   }
 
+  // Search for authors
+  static Future<List<Map<String, String>>> searchAuthors(String name) async {
+    if (name.isEmpty) return [];
+    try {
+      final response = await http.get(Uri.parse("${AppConstants.baseUrl}/author?name=${Uri.encodeComponent(name)}&limit=10"));
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        final authors = data['data'] as List<dynamic>;
+        return authors.map((author) {
+          return {
+            'id': author['id'].toString(),
+            'name': author['attributes']['name'].toString(),
+          };
+        }).toList();
+      }
+    } catch (e) {
+      print("Error fetching authors: $e");
+    }
+    return [];
+  }
+
   // Get list of Manga
   static Future<List<MangaModel>> getMangaList({
     String title = '',
+    String authorName = '',
     int limit = 10,
     int offset = 0,
     String? sortOrder,
     String? includedTagId,
+    bool hideNsfw = false,
   }) async {
-    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&limit=$limit&offset=$offset";
-    if (title.isNotEmpty) {
-      url += "&title=$title";
+    String contentRating = hideNsfw 
+        ? "&contentRating[]=safe&contentRating[]=suggestive" 
+        : "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic";
+        
+    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art$contentRating&limit=$limit&offset=$offset";
+    
+    if (authorName.isNotEmpty) {
+      final authorResponse = await http.get(Uri.parse("${AppConstants.baseUrl}/author?name=${Uri.encodeComponent(authorName)}&limit=5"));
+      if (authorResponse.statusCode == 200) {
+        final authorData = json.decode(authorResponse.body);
+        final authors = authorData['data'] as List<dynamic>;
+        if (authors.isEmpty) return []; // No authors found
+        
+        for (var author in authors) {
+          url += "&authors[]=${author['id']}";
+        }
+      } else {
+        return [];
+      }
+    } else if (title.isNotEmpty) {
+      url += "&title=${Uri.encodeComponent(title)}";
     }
     if (sortOrder != null) {
       url += "&order[$sortOrder]=desc";

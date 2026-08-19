@@ -7,11 +7,15 @@ class MangaSearchController extends GetxController {
   var searchResults = <MangaModel>[].obs;
   var isLoading = false.obs;
   var isLoadingMore = false.obs;
+  var showBackToTop = false.obs;
 
   final TextEditingController textController = TextEditingController();
   final ScrollController scrollController = ScrollController();
   
   var searchQuery = ''.obs;
+  var authorSuggestions = <Map<String, String>>[].obs;
+  var searchMode = 'manga'.obs; // 'manga' or 'artist'
+  var hideNsfw = false.obs;
   
   var selectedGenreId = ''.obs; // The UUID of the selected tag
   var selectedGenreName = 'All'.obs; // The UI display name
@@ -45,11 +49,22 @@ class MangaSearchController extends GetxController {
     // Debounce typing to avoid API spam
     debounce(searchQuery, (query) {
       if (query.isNotEmpty) {
+        if (searchMode.value == 'artist') {
+          fetchAuthorSuggestions(query);
+        } else {
+          authorSuggestions.clear();
+        }
         searchManga(query);
       } else {
+        authorSuggestions.clear();
         searchManga('');
       }
     }, time: const Duration(milliseconds: 600));
+  }
+
+  Future<void> fetchAuthorSuggestions(String query) async {
+    final authors = await MangaRepository.searchAuthors(query);
+    authorSuggestions.assignAll(authors);
   }
 
   Future<void> _fetchTags() async {
@@ -70,9 +85,23 @@ class MangaSearchController extends GetxController {
   }
 
   void _scrollListener() {
+    if (scrollController.position.pixels >= 500) {
+      if (!showBackToTop.value) showBackToTop.value = true;
+    } else {
+      if (showBackToTop.value) showBackToTop.value = false;
+    }
+
     if (scrollController.position.pixels >= scrollController.position.maxScrollExtent - 200) {
       loadMoreManga();
     }
+  }
+
+  void scrollToTop() {
+    scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   void updateGenre(String genreId, String genreName) {
@@ -88,6 +117,18 @@ class MangaSearchController extends GetxController {
     searchManga(textController.text);
   }
 
+  void toggleNsfw(bool value) {
+    hideNsfw.value = value;
+    searchManga(textController.text);
+  }
+
+  void selectAuthor(String authorName) {
+    textController.text = authorName;
+    searchQuery.value = authorName; // triggers debounce but it's fine, or we can just search directly
+    authorSuggestions.clear();
+    searchManga(authorName);
+  }
+
   Future<void> searchManga(String query) async {
     isLoading.value = true;
     currentPage = 0;
@@ -95,11 +136,13 @@ class MangaSearchController extends GetxController {
 
     try {
       final results = await MangaRepository.getMangaList(
-        title: query,
+        title: searchMode.value == 'manga' ? query : '',
+        authorName: searchMode.value == 'artist' ? query : '',
         limit: pageSize,
         offset: currentPage * pageSize,
         sortOrder: selectedSortId.value,
         includedTagId: selectedGenreId.value,
+        hideNsfw: hideNsfw.value,
       );
 
       _filterAndAssignResults(results, isLoadMore: false);
@@ -116,11 +159,13 @@ class MangaSearchController extends GetxController {
 
     try {
       final results = await MangaRepository.getMangaList(
-        title: textController.text,
+        title: searchMode.value == 'manga' ? textController.text : '',
+        authorName: searchMode.value == 'artist' ? textController.text : '',
         limit: pageSize,
         offset: (currentPage + 1) * pageSize,
         sortOrder: selectedSortId.value,
         includedTagId: selectedGenreId.value,
+        hideNsfw: hideNsfw.value,
       );
 
       _filterAndAssignResults(results, isLoadMore: true);
