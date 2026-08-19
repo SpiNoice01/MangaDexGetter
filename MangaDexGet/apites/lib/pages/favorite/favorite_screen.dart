@@ -3,7 +3,7 @@ import 'package:apites/collection/colors.dart';
 import 'package:get/get.dart';
 import 'package:apites/controllers/favorite_controller.dart';
 import 'package:apites/pages/favorite/favorite_manga_card.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/widgets/shimmer_loading.dart';
 
 class FavoriteScreen extends StatelessWidget {
   const FavoriteScreen({super.key});
@@ -40,9 +40,7 @@ class FavoriteScreen extends StatelessWidget {
         backgroundColor: const Color(0xFF23272A),
         body: Obx(() {
           if (controller.isLoading.value) {
-            return const Center(
-              child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
-            );
+            return const FavoriteListShimmer();
           }
 
           if (controller.favoriteMangaDetails.isEmpty) {

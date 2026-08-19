@@ -12,6 +12,7 @@ import 'package:apites/pages/main/favorite_manga_list.dart';
 import 'package:apites/pages/main/manga_card.dart';
 import 'package:apites/pages/main/popular_carousel.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/widgets/shimmer_loading.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -83,15 +84,8 @@ class MainScreen extends StatelessWidget {
           pagingController: controller.pagingController,
           scrollController: scrollController,
           builderDelegate: PagedChildBuilderDelegate<MangaModel>(
-            firstPageProgressIndicatorBuilder: (context) => const Center(
-              child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
-            ),
-            newPageProgressIndicatorBuilder: (context) => const Center(
-              child: Padding(
-                padding: EdgeInsets.all(16.0),
-                child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
-              ),
-            ),
+            firstPageProgressIndicatorBuilder: (context) => const MangaListShimmer(),
+            newPageProgressIndicatorBuilder: (context) => const MangaCardShimmer(),
             itemBuilder: (context, manga, index) {
               if (index == 0) {
                 return Obx(() => Column(

@@ -7,6 +7,7 @@ import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:apites/models/manga_model.dart';
+import 'package:shimmer/shimmer.dart';
 
 import 'package:apites/widgets/favorite_button.dart';
 
@@ -53,8 +54,10 @@ class MangaCard extends StatelessWidget {
                   width: 120,
                   height: 170,
                   fit: BoxFit.cover,
-                  placeholder: (context, url) => const SpinKitFadingCircle(color: Colors.white,
-                    size: 30.0,
+                  placeholder: (context, url) => Shimmer.fromColors(
+                    baseColor: const Color(0xFF2C2F33),
+                    highlightColor: const Color(0xFF3F4349),
+                    child: Container(color: Colors.white),
                   ),
                   errorWidget: (context, url, error) =>
                       const Icon(Icons.image_not_supported),

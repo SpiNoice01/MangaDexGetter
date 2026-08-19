@@ -4,7 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
 import 'package:apites/models/manga_model.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:apites/widgets/glass_badge.dart';
 
 class FavoriteMangaCard extends StatelessWidget {
@@ -40,8 +40,10 @@ class FavoriteMangaCard extends StatelessWidget {
                 width: 100,
                 height: 150,
                 fit: BoxFit.cover,
-                placeholder: (context, url) => const Center(
-                  child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
+                placeholder: (context, url) => Shimmer.fromColors(
+                  baseColor: const Color(0xFF2C2F33),
+                  highlightColor: const Color(0xFF3F4349),
+                  child: Container(color: Colors.white),
                 ),
                 errorWidget: (context, url, error) =>
                     const Icon(Icons.image_not_supported),

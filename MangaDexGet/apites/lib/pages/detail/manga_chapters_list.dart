@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:apites/controllers/detail_controller.dart';
 import 'package:get/get.dart';
 import 'package:apites/pages/read/read_manga.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/widgets/shimmer_loading.dart';
 
 class MangaChaptersList extends StatelessWidget {
   final List<Map<String, dynamic>> chapters;
@@ -148,12 +148,7 @@ class MangaChaptersList extends StatelessWidget {
             },
           ),
         if (isLoadingMore)
-          const Center(
-            child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: SpinKitFadingCircle(color: Colors.white, size: 30.0),
-            ),
-          ),
+          const ChapterListShimmer(),
       ],
     );
   }

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:apites/collection/colors.dart';
 import 'package:get/get.dart';
 import 'package:apites/controllers/search_controller.dart';
 import 'package:apites/pages/search/search_bar.dart' as custom;
 import 'package:apites/pages/search/genre_sort.dart';
 import 'package:apites/pages/search/manga_gridlist.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'package:apites/widgets/shimmer_loading.dart';
 
 class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
@@ -55,11 +54,7 @@ class SearchScreen extends StatelessWidget {
             Obx(() {
               if (controller.isLoading.value) {
                 return const Expanded(
-                  child: Center(
-                    child: SpinKitFadingCircle(color: Colors.white,
-                      size: 30.0,
-                    ),
-                  ),
+                  child: MangaGridShimmer(),
                 );
               }
               return MangaGrid(
