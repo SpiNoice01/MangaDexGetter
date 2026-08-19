@@ -90,14 +90,18 @@ class DetailScreen extends StatelessWidget {
                     final lastId = controller.lastReadChapterId.value;
                     final farthestId = controller.farthestReadChapterId.value;
 
-                    Widget buildButton(String label, String? chapterId, Color color) {
+                    Widget buildButton(String label, String? chapterId, Color color, {bool isJump = false}) {
                       return ElevatedButton(
                         onPressed: () async {
-                          await Get.to(() => ReadMangaScreen(
-                            mangaId: mangaId,
-                            chapterId: chapterId, // if null, it fetches the first available chapter inside ReadController
-                          ));
-                          controller.loadReadHistory();
+                          if (isJump && chapterId != null) {
+                            controller.jumpToChapter(chapterId);
+                          } else {
+                            await Get.to(() => ReadMangaScreen(
+                              mangaId: mangaId,
+                              chapterId: chapterId,
+                            ));
+                            controller.loadReadHistory();
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: color,
@@ -122,18 +126,18 @@ class DetailScreen extends StatelessWidget {
                     if (lastId == farthestId) {
                       return SizedBox(
                         width: double.infinity,
-                        child: buildButton('Continue Reading\n${controller.lastReadChapterTitle.value}', lastId, AppColors.mangaDex),
+                        child: buildButton('Jump to Continue Reading\n${controller.lastReadChapterTitle.value}', lastId, AppColors.mangaDex, isJump: true),
                       );
                     }
 
                     return Row(
                       children: [
                         Expanded(
-                          child: buildButton('Last Read\n${controller.lastReadChapterTitle.value}', lastId, const Color(0xFF6C757D)),
+                          child: buildButton('Jump to Last Read\n${controller.lastReadChapterTitle.value}', lastId, const Color(0xFF6C757D), isJump: true),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: buildButton('Farthest\n${controller.farthestReadChapterTitle.value}', farthestId, AppColors.mangaDex),
+                          child: buildButton('Jump to Farthest\n${controller.farthestReadChapterTitle.value}', farthestId, AppColors.mangaDex, isJump: true),
                         ),
                       ],
                     );

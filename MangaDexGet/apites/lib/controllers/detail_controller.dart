@@ -24,8 +24,11 @@ class DetailController extends GetxController {
   var farthestReadChapterTitle = RxnString();
   var readChapters = <String>[].obs;
   
+  final Map<String, GlobalKey> chapterKeys = {};
+  
   int currentPage = 0;
-  final int limit = 10;
+  final int limit = 100;
+  var isAscending = true.obs;
 
   DetailController({required this.mangaId});
 
@@ -89,6 +92,7 @@ class DetailController extends GetxController {
         mangaId,
         limit: limit,
         offset: page * limit,
+        isAscending: isAscending.value,
       );
       
       final chaptersWithDetails = await Future.wait(newChapters.map((chapter) async {
@@ -111,6 +115,33 @@ class DetailController extends GetxController {
       print("Error fetching chapters: $e");
     } finally {
       isLoadingMore.value = false;
+    }
+  }
+
+  void toggleSortOrder() {
+    isAscending.value = !isAscending.value;
+    currentPage = 0;
+    chapterKeys.clear();
+    fetchChapters(0);
+  }
+
+  void jumpToChapter(String chapterId) {
+    final key = chapterKeys[chapterId];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        alignment: 0.1, // Align slightly below the top edge
+      );
+    } else {
+      Get.snackbar(
+        'Chapter Not Found',
+        'The chapter is not currently loaded in the list. Please load more chapters or change the sort order.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color(0xFF000000).withOpacity(0.7),
+        colorText: Colors.white,
+      );
     }
   }
 
@@ -160,12 +191,8 @@ class DetailController extends GetxController {
     currentPage = 0;
     isError.value = false;
     isChapterError.value = false;
-    // Do NOT set mangaDetails to null here, or else the Pull-to-Refresh indicator will be destroyed
-    // and replaced by the full-screen SpinKit loading circle!
-    // mangaDetails.value = null;
     authorName.value = 'Unknown';
-    // Don't clear chapters here either to keep the UI smooth while fetching
-    // chapters.clear(); 
+    chapterKeys.clear();
     
     await fetchMangaDetails(); // fetchMangaDetails already clears chapters if page == 0
     await loadReadHistory();
