@@ -75,7 +75,7 @@ class ReadController extends GetxController {
         chapterNumber.value = chapterModel.chapter;
         nextChapterId.value = nextChapter?['id'];
         
-        await saveBookmark(mangaId, chapterId!);
+        await saveBookmark(mangaId, chapterId!, chapterModel.chapter);
         
         // Background task to preload next chapter if it exists
         if (nextChapterId.value != null) {
@@ -157,8 +157,33 @@ class ReadController extends GetxController {
 
   // Favorite logic is now handled by FavoriteButton and FavoriteService
 
-  Future<void> saveBookmark(String mangaId, String currentChapterId) async {
+  Future<void> saveBookmark(String mangaId, String currentChapterId, String currentChapterNum) async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // Legacy support fallback update
     await prefs.setString('bookmark_$mangaId', currentChapterId);
+
+    // Save last read
+    await prefs.setString('last_read_$mangaId', currentChapterId);
+    
+    // Save farthest read
+    final storedFarthestNumStr = prefs.getString('farthest_read_num_$mangaId');
+    double storedFarthestNum = -1.0;
+    if (storedFarthestNumStr != null) {
+      storedFarthestNum = double.tryParse(storedFarthestNumStr) ?? -1.0;
+    }
+    
+    double currentNum = double.tryParse(currentChapterNum) ?? -1.0;
+    if (currentNum >= storedFarthestNum) {
+      await prefs.setString('farthest_read_$mangaId', currentChapterId);
+      await prefs.setString('farthest_read_num_$mangaId', currentChapterNum);
+    }
+    
+    // Save history array for checkmarks
+    List<String> readChapters = prefs.getStringList('read_chapters_$mangaId') ?? [];
+    if (!readChapters.contains(currentChapterId)) {
+      readChapters.add(currentChapterId);
+      await prefs.setStringList('read_chapters_$mangaId', readChapters);
+    }
   }
 }

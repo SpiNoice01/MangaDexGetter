@@ -85,26 +85,59 @@ class DetailScreen extends StatelessWidget {
                     mangaDetails: controller.mangaDetails.value!,
                     authorName: controller.authorName.value,
                   ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      await Get.to(() => ReadMangaScreen(
-                        mangaId: mangaId,
-                        chapterId: controller.bookmarkedChapterId.value,
-                      ));
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.mangaDex,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                      textStyle: const TextStyle(fontSize: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                    child: Text(controller.bookmarkedChapterId.value != null
-                        ? 'Continue Reading, \n${controller.bookmarkedChapterTitle.value}'
-                        : 'Start Reading'),
-                  ),
+                  const SizedBox(height: 16),
+                  Obx(() {
+                    final lastId = controller.lastReadChapterId.value;
+                    final farthestId = controller.farthestReadChapterId.value;
+
+                    Widget buildButton(String label, String? chapterId, Color color) {
+                      return ElevatedButton(
+                        onPressed: () async {
+                          await Get.to(() => ReadMangaScreen(
+                            mangaId: mangaId,
+                            chapterId: chapterId, // if null, it fetches the first available chapter inside ReadController
+                          ));
+                          controller.loadReadHistory();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: color,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: Text(label, textAlign: TextAlign.center),
+                      );
+                    }
+
+                    if (lastId == null) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: buildButton('Start Reading', null, AppColors.mangaDex),
+                      );
+                    }
+
+                    if (lastId == farthestId) {
+                      return SizedBox(
+                        width: double.infinity,
+                        child: buildButton('Continue Reading\n${controller.lastReadChapterTitle.value}', lastId, AppColors.mangaDex),
+                      );
+                    }
+
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: buildButton('Last Read\n${controller.lastReadChapterTitle.value}', lastId, const Color(0xFF6C757D)),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: buildButton('Farthest\n${controller.farthestReadChapterTitle.value}', farthestId, AppColors.mangaDex),
+                        ),
+                      ],
+                    );
+                  }),
                   const SizedBox(height: 16),
                   MangaChaptersList(
                     chapters: controller.chapters.toList(),

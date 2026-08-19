@@ -18,8 +18,11 @@ class DetailController extends GetxController {
   var isError = false.obs;
   var isChapterError = false.obs;
   
-  var bookmarkedChapterId = RxnString();
-  var bookmarkedChapterTitle = RxnString();
+  var lastReadChapterId = RxnString();
+  var lastReadChapterTitle = RxnString();
+  var farthestReadChapterId = RxnString();
+  var farthestReadChapterTitle = RxnString();
+  var readChapters = <String>[].obs;
   
   int currentPage = 0;
   final int limit = 10;
@@ -30,7 +33,7 @@ class DetailController extends GetxController {
   void onInit() {
     super.onInit();
     fetchMangaDetails();
-    getBookmark();
+    loadReadHistory();
   }
 
   Future<void> fetchMangaDetails() async {
@@ -118,22 +121,39 @@ class DetailController extends GetxController {
 
   // Favorite logic is now handled by FavoriteButton and FavoriteService
 
-  Future<void> getBookmark() async {
+  Future<void> loadReadHistory() async {
     final prefs = await SharedPreferences.getInstance();
-    final chapterId = prefs.getString('bookmark_$mangaId');
-    if (chapterId != null) {
+    String? lastId = prefs.getString('last_read_$mangaId') ?? prefs.getString('bookmark_$mangaId');
+    String? farthestId = prefs.getString('farthest_read_$mangaId') ?? prefs.getString('bookmark_$mangaId');
+    
+    readChapters.assignAll(prefs.getStringList('read_chapters_$mangaId') ?? []);
+
+    if (lastId != null) {
       try {
-        final chapterDetails = await MangaDexService.getChapterDetails(chapterId);
-        bookmarkedChapterId.value = chapterId;
-        final rawTitle = chapterDetails['attributes']['title']?.toString() ?? '';
-        final chapterNum = chapterDetails['attributes']['chapter']?.toString() ?? '';
-        bookmarkedChapterTitle.value = rawTitle.isNotEmpty 
-            ? rawTitle 
-            : (chapterNum.isNotEmpty ? 'Chapter $chapterNum' : 'Oneshot');
-      } catch (e) {
-        // ignore error
-      }
+        final details = await MangaDexService.getChapterDetails(lastId);
+        lastReadChapterId.value = lastId;
+        lastReadChapterTitle.value = _formatChapterTitle(details);
+      } catch (_) {}
     }
+    
+    if (farthestId != null && farthestId != lastId) {
+      try {
+        final details = await MangaDexService.getChapterDetails(farthestId);
+        farthestReadChapterId.value = farthestId;
+        farthestReadChapterTitle.value = _formatChapterTitle(details);
+      } catch (_) {}
+    } else if (farthestId != null && farthestId == lastId) {
+      farthestReadChapterId.value = lastId;
+      farthestReadChapterTitle.value = lastReadChapterTitle.value;
+    }
+  }
+
+  String _formatChapterTitle(Map<String, dynamic> chapterDetails) {
+    final rawTitle = chapterDetails['attributes']['title']?.toString() ?? '';
+    final chapterNum = chapterDetails['attributes']['chapter']?.toString() ?? '';
+    return rawTitle.isNotEmpty 
+        ? rawTitle 
+        : (chapterNum.isNotEmpty ? 'Chapter $chapterNum' : 'Oneshot');
   }
 
   Future<void> refreshData() async {
@@ -148,7 +168,7 @@ class DetailController extends GetxController {
     // chapters.clear(); 
     
     await fetchMangaDetails(); // fetchMangaDetails already clears chapters if page == 0
-    await getBookmark();
+    await loadReadHistory();
   }
 
   // --- Cache Helpers ---
