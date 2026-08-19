@@ -89,8 +89,8 @@ class MangaCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Wrap(
-                      spacing: 3.0,
-                      runSpacing: -10.0,
+                      spacing: 4.0,
+                      runSpacing: 4.0,
                       children: genres
                           .map((genre) => GlassBadge(label: genre))
                           .toList(),
