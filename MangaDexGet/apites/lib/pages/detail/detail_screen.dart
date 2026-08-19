@@ -13,6 +13,19 @@ class DetailScreen extends StatelessWidget {
 
   const DetailScreen({super.key, required this.mangaId});
 
+  String _getLanguageName(String code) {
+    switch (code) {
+      case 'en': return 'English';
+      case 'id': return 'Indonesian';
+      case 'es-la': return 'Spanish (LA)';
+      case 'fr': return 'French';
+      case 'pt-br': return 'Portuguese (BR)';
+      case 'ja': return 'Japanese (Raw)';
+      case 'all': return 'All Languages';
+      default: return code.toUpperCase();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // Inject Controller
@@ -147,23 +160,32 @@ class DetailScreen extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text('Chapters', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                      Obx(() => DropdownButton<String>(
-                        value: controller.selectedLanguage.value,
-                        dropdownColor: const Color(0xFF2C2F33),
-                        style: const TextStyle(color: Colors.white),
-                        underline: const SizedBox(),
-                        icon: const Icon(Icons.language, color: Colors.white70),
-                        items: const [
-                          DropdownMenuItem(value: 'en', child: Text('English')),
-                          DropdownMenuItem(value: 'id', child: Text('Indonesian')),
-                          DropdownMenuItem(value: 'es-la', child: Text('Spanish (LA)')),
-                          DropdownMenuItem(value: 'fr', child: Text('French')),
-                          DropdownMenuItem(value: 'pt-br', child: Text('Portuguese (BR)')),
-                          DropdownMenuItem(value: 'ja', child: Text('Japanese')),
+                      Obx(() => PopupMenuButton<String>(
+                        color: const Color(0xFF2C2F33),
+                        onSelected: controller.changeLanguage,
+                        itemBuilder: (context) => const [
+                          PopupMenuItem(value: 'en', child: Text('English', style: TextStyle(color: Colors.white))),
+                          PopupMenuItem(value: 'id', child: Text('Indonesian', style: TextStyle(color: Colors.white))),
+                          PopupMenuItem(value: 'es-la', child: Text('Spanish (LA)', style: TextStyle(color: Colors.white))),
+                          PopupMenuItem(value: 'fr', child: Text('French', style: TextStyle(color: Colors.white))),
+                          PopupMenuItem(value: 'pt-br', child: Text('Portuguese (BR)', style: TextStyle(color: Colors.white))),
+                          PopupMenuItem(value: 'ja', child: Text('Japanese (Raw)', style: TextStyle(color: Colors.white))),
+                          PopupMenuItem(value: 'all', child: Text('All Languages', style: TextStyle(color: Colors.white))),
                         ],
-                        onChanged: (val) {
-                          if (val != null) controller.changeLanguage(val);
-                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 4.0),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _getLanguageName(controller.selectedLanguage.value),
+                                style: const TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w500),
+                              ),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.language, color: Colors.white70, size: 20),
+                            ],
+                          ),
+                        ),
                       )),
                     ],
                   ),

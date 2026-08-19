@@ -66,6 +66,13 @@ class MangaModel {
         return tag['attributes']?['name']?['en']?.toString() ?? "Unknown";
       }).toList();
     }
+    
+    // Add contentRating to genres if not safe
+    if (json['attributes']?['contentRating'] != null && json['attributes']['contentRating'] != 'safe') {
+      String rating = json['attributes']['contentRating'].toString();
+      rating = "${rating[0].toUpperCase()}${rating.substring(1)}";
+      parsedGenres.insert(0, rating); // Put it at the beginning so it's always visible
+    }
 
     // Extract coverUrl
     String? parsedCover = json['coverUrl']?.toString();

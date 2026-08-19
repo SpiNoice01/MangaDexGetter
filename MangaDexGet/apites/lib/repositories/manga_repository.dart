@@ -31,7 +31,7 @@ class MangaRepository {
     String? sortOrder,
     String? includedTagId,
   }) async {
-    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art&limit=$limit&offset=$offset";
+    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&limit=$limit&offset=$offset";
     if (title.isNotEmpty) {
       url += "&title=$title";
     }
@@ -62,8 +62,7 @@ class MangaRepository {
     if (ids.isEmpty) return [];
     
     // MangaDex allows up to 100 ids per request
-    // We construct the query string manually for arrays
-    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art&limit=${ids.length}";
+    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&limit=${ids.length}";
     for (var id in ids) {
       url += "&ids[]=$id";
     }
@@ -86,7 +85,7 @@ class MangaRepository {
   // Get popular Manga
   static Future<List<MangaModel>> getPopularManga() async {
     final response = await http.get(Uri.parse(
-        "${AppConstants.baseUrl}/manga?includes[]=cover_art&order[followedCount]=desc&limit=10"));
+        "${AppConstants.baseUrl}/manga?includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[followedCount]=desc&limit=10"));
         
     if (response.statusCode == 200) {
       final data = json.decode(response.body);

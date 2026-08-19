@@ -8,7 +8,7 @@ class MangaDexService {
   static Future<List<Map<String, dynamic>>> getMangaList(
       {required String title, int limit = 10, int offset = 0}) async {
     final response = await http.get(Uri.parse(
-        "$baseUrl/manga?title=$title&includes[]=cover_art&limit=$limit&offset=$offset"));
+        "$baseUrl/manga?title=$title&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&limit=$limit&offset=$offset"));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final mangaList = (data['data'] as List<dynamic>)
@@ -41,7 +41,7 @@ class MangaDexService {
   // Get popular Manga
   static Future<List<Map<String, dynamic>>> getPopularManga() async {
     final response = await http.get(Uri.parse(
-        "$baseUrl/manga?includes[]=cover_art&order[followedCount]=desc&limit=10"));
+        "$baseUrl/manga?includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[followedCount]=desc&limit=10"));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final mangaList = (data['data'] as List<dynamic>)
@@ -129,8 +129,9 @@ class MangaDexService {
   static Future<List<Map<String, dynamic>>> getMangaChapters(String mangaId,
       {required int limit, required int offset, bool isAscending = true, String translatedLanguage = 'en'}) async {
     final order = isAscending ? 'asc' : 'desc';
+    final langQuery = translatedLanguage == 'all' ? '' : 'translatedLanguage[]=$translatedLanguage&';
     final response = await http.get(Uri.parse(
-        '$baseUrl/manga/$mangaId/feed?translatedLanguage[]=$translatedLanguage&order[chapter]=$order&limit=$limit&offset=$offset'));
+        '$baseUrl/manga/$mangaId/feed?${langQuery}order[chapter]=$order&limit=$limit&offset=$offset'));
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
@@ -179,7 +180,7 @@ class MangaDexService {
   static Future<List<Map<String, dynamic>>> getMangaListSortedByRating(
       {required String title, int limit = 10, int offset = 0}) async {
     final response = await http.get(Uri.parse(
-        "$baseUrl/manga?title=$title&includes[]=cover_art&limit=$limit&offset=$offset&order[rating]=desc"));
+        "$baseUrl/manga?title=$title&includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&limit=$limit&offset=$offset&order[rating]=desc"));
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final mangaList = (data['data'] as List<dynamic>)

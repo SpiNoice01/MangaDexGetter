@@ -13,47 +13,44 @@ class SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: TextField(
-        controller: searchController,
-        decoration: InputDecoration(
-          labelText: 'Search',
-          labelStyle: const TextStyle(color: Colors.white),
-          suffixIcon: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (searchController.text.isNotEmpty)
-                IconButton(
-                  icon: const Icon(Icons.clear, color: Colors.white54),
-                  onPressed: () {
-                    searchController.clear();
-                    onSearch('');
-                  },
-                ),
-              IconButton(
-                icon: const Icon(Icons.search, color: Colors.white),
-                onPressed: () {
-                  FocusScope.of(context).unfocus();
-                  onSearch(searchController.text);
-                },
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: ValueListenableBuilder<TextEditingValue>(
+        valueListenable: searchController,
+        builder: (context, value, child) {
+          return TextField(
+            controller: searchController,
+            decoration: InputDecoration(
+              hintText: 'Search manga, author, or keyword...',
+              hintStyle: const TextStyle(color: Colors.white54),
+              prefixIcon: const Icon(Icons.search, color: Colors.white54),
+              suffixIcon: value.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.cancel, color: Colors.white38),
+                      onPressed: () {
+                        searchController.clear();
+                        onSearch('');
+                      },
+                    )
+                  : null,
+              filled: true,
+              fillColor: const Color(0xFF2C2F33),
+              contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: BorderSide.none,
               ),
-            ],
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.white),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: const BorderSide(color: Colors.white),
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-        style: const TextStyle(color: Colors.white),
-        onChanged: (value) {
-          onSearch(value);
-        },
-        onSubmitted: (query) {
-          onSearch(query);
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(24),
+                borderSide: const BorderSide(color: Color(0xFFFF6444), width: 1.5),
+              ),
+            ),
+            style: const TextStyle(color: Colors.white, fontSize: 16),
+            onChanged: onSearch,
+            onSubmitted: (query) {
+              FocusScope.of(context).unfocus();
+              onSearch(query);
+            },
+          );
         },
       ),
     );
