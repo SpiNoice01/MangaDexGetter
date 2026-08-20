@@ -74,7 +74,7 @@ class CarouselSliderWidget extends StatelessWidget {
                     children: [
                       Wrap(
                         spacing: 4.0,
-                        runSpacing: 2.0,
+                        runSpacing: 8.0,
                         children: genres
                             .take(5)
                             .map((genre) => GlassBadge(label: genre))

@@ -65,7 +65,7 @@ class PopularCarousel extends StatelessWidget {
                           const SizedBox(height: 2),
                           Wrap(
                             spacing: 4.0,
-                            runSpacing: 4.0,
+                            runSpacing: 8.0,
                             children: genres
                                 .map((genre) => GlassBadge(label: genre))
                                 .toList(),
