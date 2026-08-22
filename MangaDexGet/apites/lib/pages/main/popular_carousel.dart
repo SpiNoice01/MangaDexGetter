@@ -15,7 +15,7 @@ class PopularCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CarouselSlider(
-      options: CarouselOptions(height: 370.0),
+      options: CarouselOptions(height: 350.0),
       items: popularMangaList.map((manga) {
         final title = manga.title;
         final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";
@@ -31,19 +31,20 @@ class PopularCarousel extends StatelessWidget {
                 color: const Color(0xFF2C2F33),
                 child: Column(
                   children: [
-                    CachedNetworkImage(
-                      imageUrl: imageUrl,
-                      width: double.infinity,
-                      height: 250,
-                      fit: BoxFit.cover,
-                      alignment: Alignment.topCenter,
-                      placeholder: (context, url) => Shimmer.fromColors(
-                        baseColor: const Color(0xFF2C2F33),
-                        highlightColor: const Color(0xFF3F4349),
-                        child: Container(color: Colors.white),
+                    Expanded(
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.topCenter,
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: const Color(0xFF2C2F33),
+                          highlightColor: const Color(0xFF3F4349),
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (context, url, error) =>
+                            const Icon(Icons.image_not_supported),
                       ),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.image_not_supported),
                     ),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
