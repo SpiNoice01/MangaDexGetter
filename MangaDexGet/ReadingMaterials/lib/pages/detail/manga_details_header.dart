@@ -6,6 +6,8 @@ import 'package:apites/widgets/glass_badge.dart';
 import 'package:apites/widgets/favorite_button.dart';
 import 'package:apites/pages/search/search_manga.dart';
 import 'package:get/get.dart';
+import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MangaDetailsHeader extends StatelessWidget {
   final MangaModel mangaDetails;
@@ -59,11 +61,21 @@ class MangaDetailsHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          mangaDetails.description,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
+        MarkdownBody(
+          data: mangaDetails.description,
+          onTapLink: (text, href, title) async {
+            if (href == null) return;
+            final uri = Uri.tryParse(href);
+            if (uri != null && await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          },
+          styleSheet: MarkdownStyleSheet(
+            p: const TextStyle(color: Colors.white70, fontSize: 16),
+            strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            em: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+            a: const TextStyle(color: Color(0xFFFF6444), decoration: TextDecoration.underline),
+            listBullet: const TextStyle(color: Colors.white70, fontSize: 16),
           ),
         ),
         const SizedBox(height: 16),
