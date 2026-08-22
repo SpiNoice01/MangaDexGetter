@@ -3,10 +3,12 @@ import 'package:get/get.dart';
 import 'package:apites/pages/main/main_screen.dart';
 
 import 'package:apites/services/favorite_service.dart';
+import 'package:apites/services/history_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Get.putAsync(() => FavoriteService().init());
+  await Get.putAsync(() => HistoryService().init());
   runApp(const MyApp());
 }
 

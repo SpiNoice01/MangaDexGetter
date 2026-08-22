@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:apites/core/constants/app_constants.dart';
@@ -16,6 +17,9 @@ class MainController extends GetxController {
   var hideNsfw = true.obs;
   final FavoriteService favService = Get.find<FavoriteService>();
 
+  final ScrollController scrollController = ScrollController();
+  var showBackToTop = false.obs;
+
   @override
   void onInit() {
     super.onInit();
@@ -24,7 +28,8 @@ class MainController extends GetxController {
     pagingController.addPageRequestListener((pageKey) {
       _fetchPage(pageKey);
     });
-    
+    scrollController.addListener(_scrollListener);
+
     // Auto sync when favorites change globally
     ever(favService.favoriteIds, (_) {
       fetchFavoriteManga();
@@ -33,8 +38,25 @@ class MainController extends GetxController {
 
   @override
   void onClose() {
+    scrollController.dispose();
     pagingController.dispose();
     super.onClose();
+  }
+
+  void _scrollListener() {
+    if (scrollController.position.pixels >= 500) {
+      if (!showBackToTop.value) showBackToTop.value = true;
+    } else {
+      if (showBackToTop.value) showBackToTop.value = false;
+    }
+  }
+
+  void scrollToTop() {
+    scrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+    );
   }
 
   // Handle Pagination Data

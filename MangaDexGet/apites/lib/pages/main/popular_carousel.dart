@@ -15,7 +15,7 @@ class PopularCarousel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CarouselSlider(
-      options: CarouselOptions(height: 350.0),
+      options: CarouselOptions(height: 370.0),
       items: popularMangaList.map((manga) {
         final title = manga.title;
         final imageUrl = manga.coverUrl ?? "https://via.placeholder.com/150";

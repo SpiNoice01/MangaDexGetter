@@ -5,4 +5,9 @@ class AppConstants {
   // SharedPreferences Keys
   static const String likedMangaKey = "likedManga";
   static const String cachedMangaListKey = "mangaList";
+  static const String historyMangaIdsKey = "historyMangaIds";
+  static const String historyTrackingEnabledKey = "historyTrackingEnabled";
+
+  // Most-recently-viewed manga ids kept in history
+  static const int maxHistoryEntries = 100;
 }

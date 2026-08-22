@@ -4,6 +4,7 @@ import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:apites/models/manga_model.dart';
 import 'package:apites/repositories/manga_repository.dart';
+import 'package:apites/services/history_service.dart';
 
 class DetailController extends GetxController {
   final String mangaId;
@@ -36,6 +37,7 @@ class DetailController extends GetxController {
     super.onInit();
     fetchMangaDetails();
     loadReadHistory();
+    Get.find<HistoryService>().recordView(mangaId);
   }
 
   Future<void> fetchMangaDetails() async {

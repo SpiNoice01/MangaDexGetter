@@ -7,6 +7,7 @@ import 'package:apites/models/manga_model.dart';
 import 'package:apites/controllers/main_controller.dart';
 import 'package:apites/pages/search/search_manga.dart';
 import 'package:apites/pages/favorite/favorite_screen.dart';
+import 'package:apites/pages/history/history_screen.dart';
 import 'package:apites/pages/main/carousel_slider_widget.dart';
 import 'package:apites/pages/main/favorite_manga_list.dart';
 import 'package:apites/pages/main/manga_card.dart';
@@ -20,7 +21,6 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     // Inject the controller
     final MainController controller = Get.put(MainController());
-    final ScrollController scrollController = ScrollController();
 
     String truncateTitle(String title) {
       const int wordLimit = 1;
@@ -90,21 +90,17 @@ class MainScreen extends StatelessWidget {
             },
           ),
           IconButton(
+            icon: const Icon(Icons.history,
+                color: Color.fromARGB(255, 237, 237, 237)),
+            onPressed: () {
+              Get.to(() => const HistoryScreen());
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.favorite, color: AppColors.mangaDex),
             onPressed: () async {
               await Get.to(() => const FavoriteScreen());
               controller.fetchFavoriteManga(); // Refresh after returning
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.arrow_upward,
-                color: Color.fromARGB(255, 237, 237, 237)),
-            onPressed: () {
-              scrollController.animateTo(
-                0,
-                duration: const Duration(seconds: 1),
-                curve: Curves.easeInOut,
-              );
             },
           ),
         ],
@@ -115,7 +111,7 @@ class MainScreen extends StatelessWidget {
         onRefresh: controller.refreshPage,
         child: PagedListView<int, MangaModel>(
           pagingController: controller.pagingController,
-          scrollController: scrollController,
+          scrollController: controller.scrollController,
           builderDelegate: PagedChildBuilderDelegate<MangaModel>(
             firstPageProgressIndicatorBuilder: (context) => const MangaListShimmer(),
             newPageProgressIndicatorBuilder: (context) => const MangaCardShimmer(),
@@ -164,6 +160,16 @@ class MainScreen extends StatelessWidget {
           ),
         ),
       ),
+      floatingActionButton: Obx(() {
+        if (controller.showBackToTop.value) {
+          return FloatingActionButton(
+            backgroundColor: const Color(0xFFFF6444),
+            onPressed: controller.scrollToTop,
+            child: const Icon(Icons.arrow_upward, color: Colors.white),
+          );
+        }
+        return const SizedBox.shrink();
+      }),
     );
   }
 }
