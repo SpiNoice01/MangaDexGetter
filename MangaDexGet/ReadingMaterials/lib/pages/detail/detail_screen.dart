@@ -31,12 +31,6 @@ class DetailScreen extends StatelessWidget {
     final DetailController controller = Get.put(DetailController(mangaId: mangaId), tag: mangaId);
     final ScrollController scrollController = ScrollController();
 
-    scrollController.addListener(() {
-      if (scrollController.position.pixels == scrollController.position.maxScrollExtent) {
-        controller.loadNextPage();
-      }
-    });
-
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -191,10 +185,14 @@ class DetailScreen extends StatelessWidget {
                   const SizedBox(height: 8),
                   MangaChaptersList(
                     chapters: controller.chapters.toList(),
-                    isLoadingMore: controller.isLoadingMore.value,
+                    isLoadingChapters: controller.isLoadingChapters.value,
                     isChapterError: controller.isChapterError.value,
-                    currentPage: controller.currentPage,
-                    fetchChapters: controller.fetchChapters,
+                    currentPage: controller.currentPage.value,
+                    totalPages: controller.totalPages,
+                    pageSize: controller.limit,
+                    onRetry: () => controller.fetchChapters(controller.currentPage.value),
+                    onPreviousPage: controller.previousPage,
+                    onNextPage: controller.nextPage,
                     mangaId: mangaId,
                   ),
                 ],

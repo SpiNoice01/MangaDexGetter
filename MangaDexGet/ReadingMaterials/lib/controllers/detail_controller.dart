@@ -12,23 +12,26 @@ class DetailController extends GetxController {
   var mangaDetails = Rxn<MangaModel>();
   var authorName = 'Unknown'.obs;
   var chapters = <Map<String, dynamic>>[].obs;
-  
-  var isLoadingMore = false.obs;
+
+  var isLoadingChapters = false.obs;
   var isError = false.obs;
   var isChapterError = false.obs;
-  
+
   var lastReadChapterId = RxnString();
   var lastReadChapterTitle = RxnString();
   var farthestReadChapterId = RxnString();
   var farthestReadChapterTitle = RxnString();
   var readChapters = <String>[].obs;
-  
+
   final Map<String, GlobalKey> chapterKeys = {};
-  
-  int currentPage = 0;
-  final int limit = 100;
+
+  var currentPage = 0.obs; // 0-indexed
+  var totalChapterCount = 0.obs;
+  final int limit = 25;
   var isAscending = true.obs;
   var selectedLanguage = 'en'.obs;
+
+  int get totalPages => totalChapterCount.value <= 0 ? 1 : (totalChapterCount.value / limit).ceil();
 
   DetailController({required this.mangaId});
 
@@ -72,15 +75,13 @@ class DetailController extends GetxController {
     }
   }
 
+  // Chapters are paginated 25 at a time (page is 0-indexed); each call
+  // replaces the currently displayed page rather than appending to it.
   Future<void> fetchChapters(int page) async {
+    isLoadingChapters.value = true;
+    chapterKeys.clear();
     try {
-      if (page == 0) {
-        chapters.clear();
-      } else {
-        isLoadingMore.value = true;
-      }
-
-      final newChapters = await MangaRepository.getMangaChapters(
+      final result = await MangaRepository.getMangaChapters(
         mangaId,
         limit: limit,
         offset: page * limit,
@@ -90,65 +91,111 @@ class DetailController extends GetxController {
 
       // The feed response already includes the page count per chapter, so there's
       // no need for an extra /chapter/{id} request per item here.
-      final chaptersWithDetails = newChapters.map((chapter) {
+      final chaptersWithDetails = result.items.map((chapter) {
         return {
           ...chapter,
           'pageCount': chapter['attributes']?['pages'] ?? 'Unknown',
         };
       }).toList();
 
-      if (page == 0) {
-        chapters.assignAll(chaptersWithDetails);
-      } else {
-        chapters.addAll(chaptersWithDetails);
-      }
-      
+      chapters.assignAll(chaptersWithDetails);
+      totalChapterCount.value = result.total;
+      currentPage.value = page;
+
       isChapterError.value = false;
     } catch (e) {
       isChapterError.value = true;
       print("Error fetching chapters: $e");
     } finally {
-      isLoadingMore.value = false;
+      isLoadingChapters.value = false;
     }
   }
 
   void toggleSortOrder() {
     isAscending.value = !isAscending.value;
-    currentPage = 0;
-    chapterKeys.clear();
     fetchChapters(0);
   }
 
   void changeLanguage(String lang) {
     selectedLanguage.value = lang;
-    currentPage = 0;
-    chapterKeys.clear();
     fetchChapters(0);
   }
 
-  void jumpToChapter(String chapterId) {
-    final key = chapterKeys[chapterId];
-    if (key != null && key.currentContext != null) {
-      Scrollable.ensureVisible(
-        key.currentContext!,
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-        alignment: 0.1, // Align slightly below the top edge
-      );
-    } else {
-      Get.snackbar(
-        'Chapter Not Found',
-        'The chapter is not currently loaded in the list. Please load more chapters or change the sort order.',
-        snackPosition: SnackPosition.TOP,
-        backgroundColor: const Color(0xFF000000).withOpacity(0.7),
-        colorText: Colors.white,
-      );
-    }
+  void nextPage() {
+    if (currentPage.value + 1 < totalPages) fetchChapters(currentPage.value + 1);
   }
 
-  void loadNextPage() {
-    currentPage++;
-    fetchChapters(currentPage);
+  void previousPage() {
+    if (currentPage.value > 0) fetchChapters(currentPage.value - 1);
+  }
+
+  void goToPage(int page) {
+    if (page < 0 || page >= totalPages || page == currentPage.value) return;
+    fetchChapters(page);
+  }
+
+  // Jumps to a chapter that may be on a different page than the one
+  // currently displayed: resolve its position in the full ordered chapter
+  // list, switch to the page it falls on, then scroll it into view.
+  Future<void> jumpToChapter(String chapterId) async {
+    final existingKey = chapterKeys[chapterId];
+    if (existingKey != null && existingKey.currentContext != null) {
+      _scrollToKey(existingKey);
+      return;
+    }
+
+    final index = await _resolveChapterIndex(chapterId);
+    if (index == null) {
+      Get.snackbar(
+        'Chapter Not Found',
+        'Could not locate that chapter with the current language filter.',
+        snackPosition: SnackPosition.TOP,
+        backgroundColor: const Color(0xFF000000).withValues(alpha: 0.7),
+        colorText: Colors.white,
+      );
+      return;
+    }
+
+    final page = index ~/ limit;
+    await fetchChapters(page);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final key = chapterKeys[chapterId];
+      if (key != null && key.currentContext != null) {
+        _scrollToKey(key);
+      }
+    });
+  }
+
+  void _scrollToKey(GlobalKey key) {
+    Scrollable.ensureVisible(
+      key.currentContext!,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
+      alignment: 0.1, // Align slightly below the top edge
+    );
+  }
+
+  // Finds [chapterId]'s position in the full ordered chapter list by
+  // paging through the feed in large batches. A rare, one-off lookup
+  // (only run when jumping to a chapter outside the current page).
+  Future<int?> _resolveChapterIndex(String chapterId) async {
+    const batchSize = 500;
+    int offset = 0;
+    while (true) {
+      final result = await MangaRepository.getMangaChapters(
+        mangaId,
+        limit: batchSize,
+        offset: offset,
+        isAscending: isAscending.value,
+        translatedLanguage: selectedLanguage.value,
+      );
+      final localIndex = result.items.indexWhere((c) => c['id'] == chapterId);
+      if (localIndex != -1) return offset + localIndex;
+
+      offset += result.items.length;
+      if (result.items.isEmpty || offset >= result.total) return null;
+    }
   }
 
   // Favorite logic is now handled by FavoriteButton and FavoriteService
@@ -189,13 +236,12 @@ class DetailController extends GetxController {
   }
 
   Future<void> refreshData() async {
-    currentPage = 0;
     isError.value = false;
     isChapterError.value = false;
     authorName.value = 'Unknown';
     chapterKeys.clear();
-    
-    await fetchMangaDetails(); // fetchMangaDetails already clears chapters if page == 0
+
+    await fetchMangaDetails(); // fetchMangaDetails triggers fetchChapters(0)
     await loadReadHistory();
   }
 

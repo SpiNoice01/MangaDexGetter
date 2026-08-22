@@ -126,7 +126,7 @@ class ReadController extends GetxController {
     isLoading.value = true;
     try {
       if (chapterId == null) {
-        final chapters = await MangaRepository.getMangaChapters(mangaId, limit: 1, offset: 0, translatedLanguage: translatedLanguage ?? 'en');
+        final chapters = (await MangaRepository.getMangaChapters(mangaId, limit: 1, offset: 0, translatedLanguage: translatedLanguage ?? 'en')).items;
         if (chapters.isNotEmpty) {
           chapterId = chapters.first['id'];
         }

@@ -167,7 +167,7 @@ class MangaRepository {
   }
 
   // Get chapters for a manga (feed), newest/oldest first depending on isAscending
-  static Future<List<Map<String, dynamic>>> getMangaChapters(
+  static Future<({List<Map<String, dynamic>> items, int total})> getMangaChapters(
     String mangaId, {
     required int limit,
     required int offset,
@@ -181,7 +181,9 @@ class MangaRepository {
 
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
-      return (data['data'] as List<dynamic>).cast<Map<String, dynamic>>();
+      final items = (data['data'] as List<dynamic>).cast<Map<String, dynamic>>();
+      final total = data['total'] as int? ?? items.length;
+      return (items: items, total: total);
     } else {
       throw Exception('Failed to load manga chapters');
     }
@@ -218,7 +220,7 @@ class MangaRepository {
     String currentChapterId, {
     String translatedLanguage = 'en',
   }) async {
-    final chapters = await getMangaChapters(mangaId, limit: 100, offset: 0, translatedLanguage: translatedLanguage);
+    final chapters = (await getMangaChapters(mangaId, limit: 100, offset: 0, translatedLanguage: translatedLanguage)).items;
     for (int i = 0; i < chapters.length; i++) {
       if (chapters[i]['id'] == currentChapterId && i + 1 < chapters.length) {
         return chapters[i + 1];

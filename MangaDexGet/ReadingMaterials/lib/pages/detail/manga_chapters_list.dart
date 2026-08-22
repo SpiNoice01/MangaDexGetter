@@ -6,19 +6,27 @@ import 'package:apites/widgets/shimmer_loading.dart';
 
 class MangaChaptersList extends StatelessWidget {
   final List<Map<String, dynamic>> chapters;
-  final bool isLoadingMore;
+  final bool isLoadingChapters;
   final bool isChapterError;
   final int currentPage;
-  final Future<void> Function(int) fetchChapters;
+  final int totalPages;
+  final int pageSize;
+  final VoidCallback onRetry;
+  final VoidCallback onPreviousPage;
+  final VoidCallback onNextPage;
   final String mangaId;
 
   const MangaChaptersList({
     super.key,
     required this.chapters,
-    required this.isLoadingMore,
+    required this.isLoadingChapters,
     required this.isChapterError,
     required this.currentPage,
-    required this.fetchChapters,
+    required this.totalPages,
+    required this.pageSize,
+    required this.onRetry,
+    required this.onPreviousPage,
+    required this.onNextPage,
     required this.mangaId,
   });
 
@@ -72,13 +80,19 @@ class MangaChaptersList extends StatelessWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => fetchChapters(currentPage),
+                  onPressed: onRetry,
                   child: const Text('Retry'),
                 ),
               ],
             ),
           )
-        else
+        else if (isLoadingChapters)
+          const ChapterListShimmer()
+        else ...[
+          if (totalPages > 1) ...[
+            _buildPageControls(),
+            const SizedBox(height: 8),
+          ],
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -128,7 +142,7 @@ class MangaChaptersList extends StatelessWidget {
                     child: ListTile(
                       leading: Icon(trailingIcon, color: iconColor),
                       title: Text(
-                        'Chapter ${index + 1}: $chapterTitle',
+                        'Chapter ${currentPage * pageSize + index + 1}: $chapterTitle',
                         style: const TextStyle(color: Colors.white),
                       ),
                       subtitle: Text(
@@ -147,8 +161,33 @@ class MangaChaptersList extends StatelessWidget {
                 });
             },
           ),
-        if (isLoadingMore)
-          const ChapterListShimmer(),
+          if (totalPages > 1) ...[
+            const SizedBox(height: 12),
+            _buildPageControls(),
+          ],
+        ],
+      ],
+    );
+  }
+
+  Widget _buildPageControls() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        IconButton(
+          icon: const Icon(Icons.chevron_left),
+          color: currentPage > 0 ? Colors.white : Colors.white24,
+          onPressed: currentPage > 0 ? onPreviousPage : null,
+        ),
+        Text(
+          'Page ${currentPage + 1} of $totalPages',
+          style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold),
+        ),
+        IconButton(
+          icon: const Icon(Icons.chevron_right),
+          color: currentPage < totalPages - 1 ? Colors.white : Colors.white24,
+          onPressed: currentPage < totalPages - 1 ? onNextPage : null,
+        ),
       ],
     );
   }

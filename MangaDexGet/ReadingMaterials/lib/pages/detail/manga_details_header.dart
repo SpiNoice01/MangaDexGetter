@@ -9,7 +9,7 @@ import 'package:get/get.dart';
 import 'package:flutter_markdown_plus/flutter_markdown_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class MangaDetailsHeader extends StatelessWidget {
+class MangaDetailsHeader extends StatefulWidget {
   final MangaModel mangaDetails;
   final String authorName;
 
@@ -20,7 +20,23 @@ class MangaDetailsHeader extends StatelessWidget {
   });
 
   @override
+  State<MangaDetailsHeader> createState() => _MangaDetailsHeaderState();
+}
+
+class _MangaDetailsHeaderState extends State<MangaDetailsHeader> {
+  // Only worth collapsing past a rough length, so short descriptions aren't
+  // shown with a "See more" that has nothing more to reveal.
+  static const int _collapseThreshold = 250;
+  static const double _collapsedHeight = 110.0;
+
+  bool _isDescriptionExpanded = false;
+
+  @override
   Widget build(BuildContext context) {
+    final mangaDetails = widget.mangaDetails;
+    final authorName = widget.authorName;
+    final canCollapse = mangaDetails.description.length > _collapseThreshold;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -61,23 +77,22 @@ class MangaDetailsHeader extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        MarkdownBody(
-          data: mangaDetails.description,
-          onTapLink: (text, href, title) async {
-            if (href == null) return;
-            final uri = Uri.tryParse(href);
-            if (uri != null && await canLaunchUrl(uri)) {
-              await launchUrl(uri, mode: LaunchMode.externalApplication);
-            }
-          },
-          styleSheet: MarkdownStyleSheet(
-            p: const TextStyle(color: Colors.white70, fontSize: 16),
-            strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            em: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
-            a: const TextStyle(color: Color(0xFFFF6444), decoration: TextDecoration.underline),
-            listBullet: const TextStyle(color: Colors.white70, fontSize: 16),
+        _buildDescription(mangaDetails, canCollapse),
+        if (canCollapse)
+          Padding(
+            padding: const EdgeInsets.only(top: 4.0),
+            child: GestureDetector(
+              onTap: () => setState(() => _isDescriptionExpanded = !_isDescriptionExpanded),
+              child: Text(
+                _isDescriptionExpanded ? 'See less' : 'See more',
+                style: const TextStyle(
+                  color: Color(0xFFFF6444),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
           ),
-        ),
         const SizedBox(height: 16),
         Wrap(
           spacing: 8.0,
@@ -152,6 +167,38 @@ class MangaDetailsHeader extends StatelessWidget {
           thickness: 1,
         ),
       ],
+    );
+  }
+
+  Widget _buildDescription(MangaModel mangaDetails, bool canCollapse) {
+    final description = MarkdownBody(
+      data: mangaDetails.description,
+      onTapLink: (text, href, title) async {
+        if (href == null) return;
+        final uri = Uri.tryParse(href);
+        if (uri != null && await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        }
+      },
+      styleSheet: MarkdownStyleSheet(
+        p: const TextStyle(color: Colors.white70, fontSize: 16),
+        strong: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        em: const TextStyle(color: Colors.white70, fontStyle: FontStyle.italic),
+        a: const TextStyle(color: Color(0xFFFF6444), decoration: TextDecoration.underline),
+        listBullet: const TextStyle(color: Colors.white70, fontSize: 16),
+      ),
+    );
+
+    if (!canCollapse || _isDescriptionExpanded) return description;
+
+    return SizedBox(
+      height: _collapsedHeight,
+      child: ClipRect(
+        child: SingleChildScrollView(
+          physics: const NeverScrollableScrollPhysics(),
+          child: description,
+        ),
+      ),
     );
   }
 }
