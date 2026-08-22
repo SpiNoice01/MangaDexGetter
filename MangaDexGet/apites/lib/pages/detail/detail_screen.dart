@@ -4,7 +4,6 @@ import 'package:apites/collection/colors.dart';
 import 'package:apites/controllers/detail_controller.dart';
 import 'package:apites/pages/read/read_manga.dart';
 import 'package:apites/pages/detail/manga_details_header.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:apites/widgets/shimmer_loading.dart';
 import 'package:apites/pages/detail/manga_chapters_list.dart';
 

@@ -141,9 +141,9 @@ class MangaPageViewer extends StatelessWidget {
           }
           return CachedNetworkImage(
             imageUrl: pages[index],
-            placeholder: (context, url) => AspectRatio(
+            placeholder: (context, url) => const AspectRatio(
               aspectRatio: 0.7, // Standard manga page ratio so spinners don't squish
-              child: const Center(
+              child: Center(
                 child: SpinKitFadingCircle(
                   color: Colors.white,
                   size: 30.0,

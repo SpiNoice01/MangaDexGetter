@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:apites/collection/colors.dart';
 import 'package:get/get.dart';
 import 'package:apites/controllers/favorite_controller.dart';
 import 'package:apites/pages/favorite/favorite_manga_card.dart';

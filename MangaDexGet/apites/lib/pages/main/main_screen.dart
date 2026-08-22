@@ -11,7 +11,6 @@ import 'package:apites/pages/main/carousel_slider_widget.dart';
 import 'package:apites/pages/main/favorite_manga_list.dart';
 import 'package:apites/pages/main/manga_card.dart';
 import 'package:apites/pages/main/popular_carousel.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:apites/widgets/shimmer_loading.dart';
 
 class MainScreen extends StatelessWidget {

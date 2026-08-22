@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:apites/controllers/main_controller.dart';
 import 'package:apites/widgets/glass_badge.dart';
-import 'package:apites/collection/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:get/get.dart';

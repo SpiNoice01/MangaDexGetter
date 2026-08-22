@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:apites/collection/colors.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';

@@ -163,6 +163,77 @@ class MangaRepository {
     throw Exception('Failed to load manga details: ${response.reasonPhrase}');
   }
 
+  // Get chapters for a manga (feed), newest/oldest first depending on isAscending
+  static Future<List<Map<String, dynamic>>> getMangaChapters(
+    String mangaId, {
+    required int limit,
+    required int offset,
+    bool isAscending = true,
+    String translatedLanguage = 'en',
+  }) async {
+    final order = isAscending ? 'asc' : 'desc';
+    final langQuery = translatedLanguage == 'all' ? '' : 'translatedLanguage[]=$translatedLanguage&';
+    final response = await http.get(Uri.parse(
+        '${AppConstants.baseUrl}/manga/$mangaId/feed?${langQuery}order[chapter]=$order&limit=$limit&offset=$offset'));
+
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return (data['data'] as List<dynamic>).cast<Map<String, dynamic>>();
+    } else {
+      throw Exception('Failed to load manga chapters');
+    }
+  }
+
+  // Get single chapter details
+  static Future<Map<String, dynamic>> getChapterDetails(String chapterId) async {
+    final response = await http.get(Uri.parse('${AppConstants.baseUrl}/chapter/$chapterId'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      return data['data'] as Map<String, dynamic>;
+    } else {
+      throw Exception('Failed to load chapter details');
+    }
+  }
+
+  // Get chapter page image URLs
+  static Future<List<String>> getChapterPages(String chapterId) async {
+    final response = await http.get(Uri.parse('${AppConstants.baseUrl}/at-home/server/$chapterId'));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      final baseUrl = data['baseUrl'];
+      final hash = data['chapter']['hash'];
+      final pages = data['chapter']['data'];
+      return pages.map<String>((page) => "$baseUrl/data/$hash/$page").toList();
+    } else {
+      throw Exception('Failed to load chapter pages');
+    }
+  }
+
+  // Get the chapter immediately following [currentChapterId] in the feed
+  static Future<Map<String, dynamic>?> getNextChapter(
+    String mangaId,
+    String currentChapterId, {
+    String translatedLanguage = 'en',
+  }) async {
+    final chapters = await getMangaChapters(mangaId, limit: 100, offset: 0, translatedLanguage: translatedLanguage);
+    for (int i = 0; i < chapters.length; i++) {
+      if (chapters[i]['id'] == currentChapterId && i + 1 < chapters.length) {
+        return chapters[i + 1];
+      }
+    }
+    return null;
+  }
+
+  // Get author details
+  static Future<Map<String, dynamic>> getAuthorDetails(String authorId) async {
+    final response = await http.get(Uri.parse('${AppConstants.baseUrl}/author/$authorId'));
+    if (response.statusCode == 200) {
+      return json.decode(response.body)['data'];
+    } else {
+      throw Exception('Failed to load author details');
+    }
+  }
+
   // Get manga tags (genres, formats, themes)
   static Future<List<Map<String, String>>> getMangaTags() async {
     final response = await http.get(Uri.parse('${AppConstants.baseUrl}/manga/tag'));

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:apites/collection/colors.dart';
 import 'package:apites/controllers/main_controller.dart';
 import 'package:apites/widgets/glass_badge.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:get/get.dart';
 import 'package:apites/pages/detail/detail_screen.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:apites/models/manga_model.dart';
 import 'package:shimmer/shimmer.dart';
 

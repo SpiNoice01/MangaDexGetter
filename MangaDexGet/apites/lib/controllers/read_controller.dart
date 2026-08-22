@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:apites/core/constants/app_constants.dart';
 import 'package:apites/models/chapter_model.dart';
-import 'package:apites/services/mangadex_services.dart';
+import 'package:apites/repositories/manga_repository.dart';
 import 'package:flutter/services.dart';
 
 class ReadController extends GetxController {
@@ -58,18 +57,18 @@ class ReadController extends GetxController {
     isLoading.value = true;
     try {
       if (chapterId == null) {
-        final chapters = await MangaDexService.getMangaChapters(mangaId, limit: 1, offset: 0, translatedLanguage: translatedLanguage ?? 'en');
+        final chapters = await MangaRepository.getMangaChapters(mangaId, limit: 1, offset: 0, translatedLanguage: translatedLanguage ?? 'en');
         if (chapters.isNotEmpty) {
           chapterId = chapters.first['id'];
         }
       }
 
       if (chapterId != null) {
-        final chapterData = await MangaDexService.getChapterDetails(chapterId!);
+        final chapterData = await MangaRepository.getChapterDetails(chapterId!);
         final chapterModel = ChapterModel.fromJson(chapterData);
-        
-        final fetchedPages = await MangaDexService.getChapterPages(chapterId!);
-        final nextChapter = await MangaDexService.getNextChapter(mangaId, chapterId!, translatedLanguage: translatedLanguage ?? 'en');
+
+        final fetchedPages = await MangaRepository.getChapterPages(chapterId!);
+        final nextChapter = await MangaRepository.getNextChapter(mangaId, chapterId!, translatedLanguage: translatedLanguage ?? 'en');
 
         pages.assignAll(fetchedPages);
         
@@ -101,7 +100,7 @@ class ReadController extends GetxController {
     try {
       // Just fetch the links so they are cached in the HTTP client level
       // Actual image pre-caching can be done via precacheImage in the UI layer if needed
-      await MangaDexService.getChapterPages(nextId);
+      await MangaRepository.getChapterPages(nextId);
     } catch (e) {
       // Ignore errors for preloading
     }

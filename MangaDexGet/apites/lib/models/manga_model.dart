@@ -6,6 +6,7 @@ class MangaModel {
   final String? coverUrl;
   final DateTime? createdAt;
   final String? status;
+  final String? authorId;
 
   MangaModel({
     required this.id,
@@ -15,6 +16,7 @@ class MangaModel {
     this.coverUrl,
     this.createdAt,
     this.status,
+    this.authorId,
   });
 
   factory MangaModel.fromJson(Map<String, dynamic> json) {
@@ -28,6 +30,7 @@ class MangaModel {
         coverUrl: json['coverUrl']?.toString(),
         createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
         status: json['status']?.toString(),
+        authorId: json['authorId']?.toString(),
       );
     }
 
@@ -86,6 +89,17 @@ class MangaModel {
     // Extract status
     String? parsedStatus = json['attributes']?['status']?.toString();
 
+    // Extract author id (relationship attributes may not be expanded, but the id is always present)
+    String? parsedAuthorId;
+    if (json['relationships'] != null) {
+      final relationships = json['relationships'] as List<dynamic>;
+      final authorRelationship = relationships.firstWhere(
+        (rel) => rel['type'] == 'author',
+        orElse: () => null,
+      );
+      parsedAuthorId = authorRelationship?['id']?.toString();
+    }
+
     return MangaModel(
       id: json['id']?.toString() ?? "",
       title: parsedTitle,
@@ -94,6 +108,7 @@ class MangaModel {
       coverUrl: parsedCover,
       createdAt: parsedCreatedAt,
       status: parsedStatus,
+      authorId: parsedAuthorId,
     );
   }
 
@@ -106,6 +121,7 @@ class MangaModel {
       'coverUrl': coverUrl,
       'createdAt': createdAt?.toIso8601String(),
       'status': status,
+      'authorId': authorId,
     };
   }
 }

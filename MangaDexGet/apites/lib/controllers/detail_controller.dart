@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:apites/core/constants/app_constants.dart';
 import 'package:apites/models/manga_model.dart';
 import 'package:apites/repositories/manga_repository.dart';
-import 'package:apites/services/mangadex_services.dart';
 
 class DetailController extends GetxController {
   final String mangaId;
@@ -52,13 +50,10 @@ class DetailController extends GetxController {
       mangaDetails.value = manga;
       await _saveMangaDetailsToCache(manga);
 
-      // Need to fetch author using old service temporarily because relationships logic is slightly complex
-      // In a real scenario we would add it to Repository as well
-      final rawMangaData = await MangaDexService.getMangaDetails(mangaId);
-      if (rawMangaData['relationships'] != null) {
-        await _fetchAuthorDetails(rawMangaData['relationships']);
+      if (manga.authorId != null) {
+        await _fetchAuthorDetails(manga.authorId!);
       }
-      
+
       fetchChapters(0);
     } catch (e) {
       isError.value = true;
@@ -66,16 +61,10 @@ class DetailController extends GetxController {
     }
   }
 
-  Future<void> _fetchAuthorDetails(List<dynamic> relationships) async {
+  Future<void> _fetchAuthorDetails(String authorId) async {
     try {
-      final authorRelationship = relationships.firstWhere(
-          (rel) => rel['type'] == 'author',
-          orElse: () => null);
-      if (authorRelationship != null) {
-        final authorId = authorRelationship['id'];
-        final author = await MangaDexService.getAuthorDetails(authorId);
-        authorName.value = author['attributes']?['name'] ?? 'Unknown';
-      }
+      final author = await MangaRepository.getAuthorDetails(authorId);
+      authorName.value = author['attributes']?['name'] ?? 'Unknown';
     } catch (e) {
       print("Error fetching author details: $e");
     }
@@ -89,21 +78,22 @@ class DetailController extends GetxController {
         isLoadingMore.value = true;
       }
 
-      final newChapters = await MangaDexService.getMangaChapters(
+      final newChapters = await MangaRepository.getMangaChapters(
         mangaId,
         limit: limit,
         offset: page * limit,
         isAscending: isAscending.value,
         translatedLanguage: selectedLanguage.value,
       );
-      
-      final chaptersWithDetails = await Future.wait(newChapters.map((chapter) async {
-        final chapterDetails = await MangaDexService.getChapterDetails(chapter['id']);
+
+      // The feed response already includes the page count per chapter, so there's
+      // no need for an extra /chapter/{id} request per item here.
+      final chaptersWithDetails = newChapters.map((chapter) {
         return {
           ...chapter,
-          'pageCount': chapterDetails['attributes']['pages'] ?? 'Unknown',
+          'pageCount': chapter['attributes']?['pages'] ?? 'Unknown',
         };
-      }));
+      }).toList();
 
       if (page == 0) {
         chapters.assignAll(chaptersWithDetails);
@@ -170,15 +160,15 @@ class DetailController extends GetxController {
 
     if (lastId != null) {
       try {
-        final details = await MangaDexService.getChapterDetails(lastId);
+        final details = await MangaRepository.getChapterDetails(lastId);
         lastReadChapterId.value = lastId;
         lastReadChapterTitle.value = _formatChapterTitle(details);
       } catch (_) {}
     }
-    
+
     if (farthestId != null && farthestId != lastId) {
       try {
-        final details = await MangaDexService.getChapterDetails(farthestId);
+        final details = await MangaRepository.getChapterDetails(farthestId);
         farthestReadChapterId.value = farthestId;
         farthestReadChapterTitle.value = _formatChapterTitle(details);
       } catch (_) {}
