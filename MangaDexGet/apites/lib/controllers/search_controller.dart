@@ -20,8 +20,8 @@ class MangaSearchController extends GetxController {
   var selectedGenreId = ''.obs; // The UUID of the selected tag
   var selectedGenreName = 'All'.obs; // The UI display name
   
-  var selectedSortId = 'relevance'.obs; // The sort order key for API
-  var selectedSortName = 'Relevance'.obs; // The UI display name
+  var selectedSortId = 'latestUploadedChapter'.obs; // The sort order key for API
+  var selectedSortName = 'Latest Uploaded'.obs; // The UI display name
   
   var selectedStatus = ''.obs;
   

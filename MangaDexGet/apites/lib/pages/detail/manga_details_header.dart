@@ -124,6 +124,16 @@ class MangaDetailsHeader extends StatelessWidget {
             fontSize: 16,
           ),
         ),
+        if (mangaDetails.updatedLabel != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            mangaDetails.updatedLabel!,
+            style: const TextStyle(
+              color: Colors.white70,
+              fontSize: 16,
+            ),
+          ),
+        ],
         const SizedBox(height: 16),
         const Divider(
           color: Color.fromARGB(65, 255, 255, 255),

@@ -91,6 +91,13 @@ class CarouselSliderWidget extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      if (manga.updatedLabel != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          manga.updatedLabel!,
+                          style: const TextStyle(color: Colors.white54, fontSize: 12),
+                        ),
+                      ],
                     ],
                   ),
                 ),

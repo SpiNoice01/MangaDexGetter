@@ -81,7 +81,7 @@ class MangaGrid extends StatelessWidget {
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12.0)
-                        .copyWith(bottom: 12.0),
+                        .copyWith(bottom: manga.updatedLabel != null ? 2.0 : 12.0),
                     child: Text(
                       desc,
                       maxLines: 2,
@@ -89,6 +89,15 @@ class MangaGrid extends StatelessWidget {
                       style: const TextStyle(color: Colors.white70),
                     ),
                   ),
+                  if (manga.updatedLabel != null)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12.0)
+                          .copyWith(bottom: 12.0),
+                      child: Text(
+                        manga.updatedLabel!,
+                        style: const TextStyle(color: Colors.white38, fontSize: 11),
+                      ),
+                    ),
                 ],
               ),
             ),

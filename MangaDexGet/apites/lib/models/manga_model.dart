@@ -5,6 +5,7 @@ class MangaModel {
   final List<String> genres;
   final String? coverUrl;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
   final String? status;
   final String? authorId;
 
@@ -15,9 +16,22 @@ class MangaModel {
     required this.genres,
     this.coverUrl,
     this.createdAt,
+    this.updatedAt,
     this.status,
     this.authorId,
   });
+
+  // Simple relative-time label for display, e.g. "Updated 3d ago"
+  String? get updatedLabel {
+    if (updatedAt == null) return null;
+    final diff = DateTime.now().difference(updatedAt!);
+    if (diff.inDays >= 365) return 'Updated ${(diff.inDays / 365).floor()}y ago';
+    if (diff.inDays >= 30) return 'Updated ${(diff.inDays / 30).floor()}mo ago';
+    if (diff.inDays >= 1) return 'Updated ${diff.inDays}d ago';
+    if (diff.inHours >= 1) return 'Updated ${diff.inHours}h ago';
+    if (diff.inMinutes >= 1) return 'Updated ${diff.inMinutes}m ago';
+    return 'Updated just now';
+  }
 
   factory MangaModel.fromJson(Map<String, dynamic> json) {
     // If loading from SharedPreferences cache (flat structure, no 'attributes')
@@ -29,6 +43,7 @@ class MangaModel {
         genres: (json['genres'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
         coverUrl: json['coverUrl']?.toString(),
         createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'].toString()) : null,
+        updatedAt: json['updatedAt'] != null ? DateTime.tryParse(json['updatedAt'].toString()) : null,
         status: json['status']?.toString(),
         authorId: json['authorId']?.toString(),
       );
@@ -85,7 +100,13 @@ class MangaModel {
     if (json['attributes']?['createdAt'] != null) {
       parsedCreatedAt = DateTime.tryParse(json['attributes']['createdAt'].toString());
     }
-    
+
+    // Extract updatedAt (bumps whenever the manga's chapters are updated)
+    DateTime? parsedUpdatedAt;
+    if (json['attributes']?['updatedAt'] != null) {
+      parsedUpdatedAt = DateTime.tryParse(json['attributes']['updatedAt'].toString());
+    }
+
     // Extract status
     String? parsedStatus = json['attributes']?['status']?.toString();
 
@@ -107,6 +128,7 @@ class MangaModel {
       genres: parsedGenres,
       coverUrl: parsedCover,
       createdAt: parsedCreatedAt,
+      updatedAt: parsedUpdatedAt,
       status: parsedStatus,
       authorId: parsedAuthorId,
     );
@@ -120,6 +142,7 @@ class MangaModel {
       'genres': genres,
       'coverUrl': coverUrl,
       'createdAt': createdAt?.toIso8601String(),
+      'updatedAt': updatedAt?.toIso8601String(),
       'status': status,
       'authorId': authorId,
     };

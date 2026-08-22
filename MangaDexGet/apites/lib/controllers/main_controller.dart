@@ -77,6 +77,7 @@ class MainController extends GetxController {
         title: "",
         limit: pageSize,
         offset: pageKey,
+        sortOrder: 'latestUploadedChapter',
         hideNsfw: hideNsfw.value,
       );
 

@@ -69,6 +69,13 @@ class PopularCarousel extends StatelessWidget {
                                 .map((genre) => GlassBadge(label: genre))
                                 .toList(),
                           ),
+                          if (manga.updatedLabel != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              manga.updatedLabel!,
+                              style: const TextStyle(color: Colors.white38, fontSize: 11),
+                            ),
+                          ],
                         ],
                       ),
                     ),
