@@ -23,6 +23,13 @@ class MangaRepository {
     return null;
   }
 
+  // Content rating query string, shared by every endpoint that lists manga
+  static String _contentRatingQuery(bool hideNsfw) {
+    return hideNsfw
+        ? "&contentRating[]=safe&contentRating[]=suggestive"
+        : "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic";
+  }
+
   // Search for authors
   static Future<List<Map<String, String>>> searchAuthors(String name) async {
     if (name.isEmpty) return [];
@@ -55,11 +62,7 @@ class MangaRepository {
     String? status,
     bool hideNsfw = false,
   }) async {
-    String contentRating = hideNsfw 
-        ? "&contentRating[]=safe&contentRating[]=suggestive" 
-        : "&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic";
-        
-    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art$contentRating&limit=$limit&offset=$offset";
+    String url = "${AppConstants.baseUrl}/manga?includes[]=cover_art${_contentRatingQuery(hideNsfw)}&limit=$limit&offset=$offset";
     
     if (authorName.isNotEmpty) {
       final authorResponse = await http.get(Uri.parse("${AppConstants.baseUrl}/author?name=${Uri.encodeComponent(authorName)}&limit=5"));
@@ -128,10 +131,10 @@ class MangaRepository {
   }
 
   // Get popular Manga
-  static Future<List<MangaModel>> getPopularManga() async {
+  static Future<List<MangaModel>> getPopularManga({bool hideNsfw = false}) async {
     final response = await http.get(Uri.parse(
-        "${AppConstants.baseUrl}/manga?includes[]=cover_art&contentRating[]=safe&contentRating[]=suggestive&contentRating[]=erotica&contentRating[]=pornographic&order[followedCount]=desc&limit=10"));
-        
+        "${AppConstants.baseUrl}/manga?includes[]=cover_art${_contentRatingQuery(hideNsfw)}&order[followedCount]=desc&limit=10"));
+
     if (response.statusCode == 200) {
       final data = json.decode(response.body);
       final mangaList = (data['data'] as List<dynamic>);

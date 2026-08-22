@@ -48,6 +48,40 @@ class MainScreen extends StatelessWidget {
         ),
         backgroundColor: const Color(0xFF2C2F33),
         actions: [
+          Obx(() => Row(
+            children: [
+              const Text('NSFW', style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              GestureDetector(
+                onTap: () => controller.toggleNsfw(!controller.hideNsfw.value),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  width: 34,
+                  height: 18,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    color: !controller.hideNsfw.value ? Colors.redAccent.withValues(alpha: 0.4) : Colors.white24,
+                  ),
+                  child: AnimatedAlign(
+                    duration: const Duration(milliseconds: 200),
+                    curve: Curves.easeInOut,
+                    alignment: !controller.hideNsfw.value ? Alignment.centerRight : Alignment.centerLeft,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2.0),
+                      child: Container(
+                        width: 14,
+                        height: 14,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: !controller.hideNsfw.value ? Colors.redAccent : Colors.white54,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          )),
           IconButton(
             icon: const Icon(Icons.search,
                 color: Color.fromARGB(255, 237, 237, 237)),

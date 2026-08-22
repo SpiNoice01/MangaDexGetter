@@ -13,6 +13,7 @@ class MainController extends GetxController {
   
   var popularMangaList = <MangaModel>[].obs;
   var favoriteMangaList = <MangaModel>[].obs;
+  var hideNsfw = true.obs;
   final FavoriteService favService = Get.find<FavoriteService>();
 
   @override
@@ -39,11 +40,12 @@ class MainController extends GetxController {
   // Handle Pagination Data
   Future<void> _fetchPage(int pageKey) async {
     try {
-      if (pageKey == 0) {
-        // Load from cache initially for smooth UX
+      if (pageKey == 0 && !hideNsfw.value) {
+        // Load from cache initially for smooth UX. Skipped in safe mode so a
+        // cache written while NSFW was visible can't flash unsafe content.
         final cachedData = await _getMangaListFromCache();
         if (cachedData != null && cachedData.isNotEmpty) {
-           // We don't append it to pagination directly to avoid duplicates when API returns, 
+           // We don't append it to pagination directly to avoid duplicates when API returns,
            // but we can set it to the list temporarily.
            pagingController.itemList = cachedData;
         }
@@ -53,6 +55,7 @@ class MainController extends GetxController {
         title: "",
         limit: pageSize,
         offset: pageKey,
+        hideNsfw: hideNsfw.value,
       );
 
       if (pageKey == 0) {
@@ -86,11 +89,17 @@ class MainController extends GetxController {
 
   Future<void> fetchPopularManga() async {
     try {
-      final popular = await MangaRepository.getPopularManga();
+      final popular = await MangaRepository.getPopularManga(hideNsfw: hideNsfw.value);
       popularMangaList.assignAll(popular);
     } catch (e) {
       print("Error fetching popular manga: $e");
     }
+  }
+
+  void toggleNsfw(bool hide) {
+    hideNsfw.value = hide;
+    fetchPopularManga();
+    pagingController.refresh();
   }
 
   Future<void> fetchFavoriteManga() async {

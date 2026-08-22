@@ -15,7 +15,7 @@ class MangaSearchController extends GetxController {
   var searchQuery = ''.obs;
   var authorSuggestions = <Map<String, String>>[].obs;
   var searchMode = 'manga'.obs; // 'manga' or 'artist'
-  var hideNsfw = false.obs;
+  var hideNsfw = true.obs;
   
   var selectedGenreId = ''.obs; // The UUID of the selected tag
   var selectedGenreName = 'All'.obs; // The UI display name
