@@ -7,6 +7,8 @@ class AppConstants {
   static const String cachedMangaListKey = "mangaList";
   static const String historyMangaIdsKey = "historyMangaIds";
   static const String historyTrackingEnabledKey = "historyTrackingEnabled";
+  static const String showVerticalReadOverlayKey = "showVerticalReadOverlay";
+  static const String showVerticalPageNumberKey = "showVerticalPageNumber";
 
   // Most-recently-viewed manga ids kept in history
   static const int maxHistoryEntries = 100;

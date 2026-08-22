@@ -14,6 +14,8 @@ class MangaPageViewer extends StatelessWidget {
   final VoidCallback readNextChapter;
   final bool isVerticalScrollMode;
   final Future<void> Function() onRefresh;
+  final ScrollController verticalScrollController;
+  final bool showPageNumber;
 
   const MangaPageViewer({
     super.key,
@@ -25,6 +27,8 @@ class MangaPageViewer extends StatelessWidget {
     required this.readNextChapter,
     required this.isVerticalScrollMode,
     required this.onRefresh,
+    required this.verticalScrollController,
+    required this.showPageNumber,
   });
 
   @override
@@ -102,6 +106,7 @@ class MangaPageViewer extends StatelessWidget {
       color: const Color(0xFFFF6444),
       onRefresh: onRefresh,
       child: ListView.builder(
+        controller: verticalScrollController,
         itemCount: pages.length + 1,
         itemBuilder: (context, index) {
           if (index == pages.length) {
@@ -139,23 +144,64 @@ class MangaPageViewer extends StatelessWidget {
               ),
             );
           }
-          return CachedNetworkImage(
-            imageUrl: pages[index],
-            placeholder: (context, url) => const AspectRatio(
-              aspectRatio: 0.7, // Standard manga page ratio so spinners don't squish
-              child: Center(
-                child: SpinKitFadingCircle(
-                  color: Colors.white,
-                  size: 30.0,
+          return Stack(
+            alignment: Alignment.bottomRight,
+            children: [
+              CachedNetworkImage(
+                imageUrl: pages[index],
+                placeholder: (context, url) => const AspectRatio(
+                  aspectRatio: 0.7, // Standard manga page ratio so spinners don't squish
+                  child: Center(
+                    child: SpinKitFadingCircle(
+                      color: Colors.white,
+                      size: 30.0,
+                    ),
+                  ),
                 ),
+                errorWidget: (context, url, error) =>
+                    const Icon(Icons.image_not_supported),
+                fit: BoxFit.contain,
               ),
-            ),
-            errorWidget: (context, url, error) =>
-                const Icon(Icons.image_not_supported),
-            fit: BoxFit.contain,
+              if (showPageNumber)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10.0, right: 12.0),
+                  child: _StampedPageNumber(label: '${index + 1} / ${pages.length}'),
+                ),
+            ],
           );
         },
       ),
+    );
+  }
+}
+
+// A page number "stamped" onto the page itself (stroke + fill text, no backdrop)
+// so it stays legible over any page content without covering it up.
+class _StampedPageNumber extends StatelessWidget {
+  final String label;
+
+  const _StampedPageNumber({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    const style = TextStyle(fontSize: 16, fontWeight: FontWeight.bold);
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        Text(
+          label,
+          style: style.copyWith(
+            foreground: Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 3
+              ..color = Colors.black.withValues(alpha: 0.75),
+          ),
+        ),
+        Text(
+          label,
+          style: style.copyWith(color: Colors.white),
+        ),
+      ],
     );
   }
 }

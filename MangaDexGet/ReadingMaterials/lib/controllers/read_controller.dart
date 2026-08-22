@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:apites/core/constants/app_constants.dart';
 import 'package:apites/models/chapter_model.dart';
 import 'package:apites/repositories/manga_repository.dart';
 import 'package:flutter/services.dart';
@@ -17,7 +19,15 @@ class ReadController extends GetxController {
   var currentPage = 0.obs;
   
   var isVerticalScrollMode = false.obs;
-  
+
+  // Vertical scroll progress tracking
+  late ScrollController verticalScrollController;
+  var scrollProgress = 0.0.obs; // 0.0 - 1.0 through the chapter
+  var isScrollBarVisible = false.obs;
+  var showVerticalOverlay = true.obs; // persisted user preference
+  var showVerticalPageNumber = true.obs; // persisted user preference
+  Timer? _hideScrollBarTimer;
+
   var chapterTitle = ''.obs;
   var chapterNumber = ''.obs;
   var nextChapterId = RxnString();
@@ -34,15 +44,74 @@ class ReadController extends GetxController {
   void onInit() {
     super.onInit();
     pageController = PageController(initialPage: currentPage.value);
+    verticalScrollController = ScrollController()..addListener(_onVerticalScroll);
     _hideSystemUI();
     fetchMangaPages();
+    _loadVerticalOverlayPreference();
+  }
+
+  Future<void> _loadVerticalOverlayPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    showVerticalOverlay.value = prefs.getBool(AppConstants.showVerticalReadOverlayKey) ?? true;
+    showVerticalPageNumber.value = prefs.getBool(AppConstants.showVerticalPageNumberKey) ?? true;
+  }
+
+  Future<void> setVerticalOverlayVisible(bool value) async {
+    showVerticalOverlay.value = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.showVerticalReadOverlayKey, value);
+  }
+
+  Future<void> setVerticalPageNumberVisible(bool value) async {
+    showVerticalPageNumber.value = value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(AppConstants.showVerticalPageNumberKey, value);
   }
 
   @override
   void onClose() {
     pageController.dispose();
+    verticalScrollController.dispose();
+    _hideScrollBarTimer?.cancel();
     _showSystemUI();
     super.onClose();
+  }
+
+  void _onVerticalScroll() {
+    if (!verticalScrollController.hasClients) return;
+    final position = verticalScrollController.position;
+    final maxScroll = position.maxScrollExtent;
+    final progress = maxScroll > 0 ? (position.pixels / maxScroll).clamp(0.0, 1.0) : 0.0;
+    scrollProgress.value = progress;
+
+    if (pages.isNotEmpty) {
+      final estimatedPage = (progress * pages.length).floor().clamp(0, pages.length - 1);
+      currentPage.value = estimatedPage;
+    }
+
+    _revealScrollBar();
+  }
+
+  void _revealScrollBar() {
+    isScrollBarVisible.value = true;
+    _hideScrollBarTimer?.cancel();
+    _hideScrollBarTimer = Timer(const Duration(milliseconds: 1200), () {
+      isScrollBarVisible.value = false;
+    });
+  }
+
+  // Jump to an approximate scroll position for [index] (page heights vary,
+  // so this mirrors the same proportional estimate used for scrollProgress).
+  void jumpToPage(int index) {
+    if (!verticalScrollController.hasClients || pages.isEmpty) return;
+    final maxScroll = verticalScrollController.position.maxScrollExtent;
+    final target = (maxScroll * (index / pages.length)).clamp(0.0, maxScroll);
+    verticalScrollController.animateTo(
+      target,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+    _revealScrollBar();
   }
   
   void _hideSystemUI() {
@@ -111,8 +180,12 @@ class ReadController extends GetxController {
   }
 
   void onPageChanged(int index) {
-    currentPage.value = index;
-    
+    // index == pages.length is the "End of Chapter" pseudo-page; keep the
+    // counter pinned at the last real page instead of counting it.
+    if (index < pages.length) {
+      currentPage.value = index;
+    }
+
     // Auto-hide System UI when scrolling
     _hideSystemUI();
     
@@ -214,7 +287,39 @@ class ReadController extends GetxController {
                 ),
               ],
             )),
-            const SizedBox(height: 8),
+            Obx(() {
+              if (!isVerticalScrollMode.value) return const SizedBox(height: 8);
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 24),
+                  const Text('Progress Overlay', style: TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 4),
+                  Obx(() => SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: const Color(0xFFFF6444),
+                    title: const Text('Show progress bar', style: TextStyle(color: Colors.white)),
+                    subtitle: const Text(
+                      'The clickable segment bar on the left edge',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                    value: showVerticalOverlay.value,
+                    onChanged: setVerticalOverlayVisible,
+                  )),
+                  Obx(() => SwitchListTile(
+                    contentPadding: EdgeInsets.zero,
+                    activeThumbColor: const Color(0xFFFF6444),
+                    title: const Text('Show page number', style: TextStyle(color: Colors.white)),
+                    subtitle: const Text(
+                      'The page count stamped at the bottom of each page',
+                      style: TextStyle(color: Colors.white54, fontSize: 12),
+                    ),
+                    value: showVerticalPageNumber.value,
+                    onChanged: setVerticalPageNumberVisible,
+                  )),
+                ],
+              );
+            }),
           ],
         ),
       ),

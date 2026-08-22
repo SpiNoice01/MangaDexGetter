@@ -37,12 +37,16 @@ class MainScreen extends StatelessWidget {
           children: [
             SvgPicture.asset(
               'lib/assets/mangaDex.svg',
-              height: 40,
+              height: 32,
             ),
-            const SizedBox(width: 10),
-            const Text(
-              'MangaDex',
-              style: TextStyle(color: Color.fromARGB(255, 237, 237, 237)),
+            const SizedBox(width: 8),
+            const Flexible(
+              child: Text(
+                'MangaDex',
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: TextStyle(color: Color.fromARGB(255, 237, 237, 237)),
+              ),
             ),
           ],
         ),
